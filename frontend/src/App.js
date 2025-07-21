@@ -2,9 +2,15 @@ import React from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-import User from './pages/User';
+import Profile from './pages/Profile';
 import { ThemeProvider } from './context/ThemeContext';
 import LoadingPage from './pages/LoadingPage';
+import Settings from './pages/Settings';
+import Cart from './pages/Cart';
+import Search from './pages/Search';
+import MainLayout from './components/MainLayout';
+import Signup from './pages/Signup';
+import Login from './pages/Login';
 
 function App() {
   const [loading, setLoading] = React.useState(true);
@@ -17,10 +23,17 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/user" element={<User />} />
-          {/* ...other routes... */}
+          {/* Routes with MainLayout */}
+          <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+          <Route path="/home" element={<MainLayout><Home /></MainLayout>} />
+          <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} />
+          <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
+          <Route path="/cart" element={<MainLayout><Cart /></MainLayout>} />
+          <Route path="/search" element={<MainLayout><Search /></MainLayout>} />
+
+          {/* Standalone Routes */}
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
