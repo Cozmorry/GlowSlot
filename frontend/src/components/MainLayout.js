@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { FaHome, FaSearch, FaShoppingCart, FaUser, FaCog, FaSun, FaMoon } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../hooks/useIsMobile';
 import BottomNav from './BottomNav';
+import Home from '../pages/Home';
 
 const DesktopSidebar = ({ theme, mode, toggleTheme }) => (
   <nav style={{
@@ -73,7 +74,27 @@ const DesktopSidebar = ({ theme, mode, toggleTheme }) => (
 const MainLayout = ({ children }) => {
   const { theme, mode, toggleTheme } = useTheme();
   const isMobile = useIsMobile();
-  
+  const location = useLocation();
+  const navigate = useNavigate();
+  const homeRef = useRef();
+
+  // Only wrap Home with ref if it's the Home page
+  const isHome = location.pathname === '/' || location.pathname === '/home';
+
+  // Mobile search button handler
+  const handleMobileSearch = () => {
+    if (isHome && homeRef.current && homeRef.current.focusSearch) {
+      homeRef.current.focusSearch();
+    } else {
+      navigate('/home');
+      setTimeout(() => {
+        if (homeRef.current && homeRef.current.focusSearch) {
+          homeRef.current.focusSearch();
+        }
+      }, 100);
+    }
+  };
+
   const sidebarWidth = 200;
   const sidebarGap = 32;
   const desktopMargin = 32;
@@ -104,9 +125,9 @@ const MainLayout = ({ children }) => {
         overflowY: !isMobile ? 'auto' : 'visible',
         overflowX: 'hidden',
       }}>
-        {children}
+        {isMobile && isHome ? React.cloneElement(children, { ref: homeRef }) : children}
       </main>
-      {isMobile && <BottomNav />}
+      {isMobile && <BottomNav onMobileSearch={handleMobileSearch} />}
     </div>
   );
 };

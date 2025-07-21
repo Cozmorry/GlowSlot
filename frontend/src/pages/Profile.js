@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { FaUser, FaCog } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const user = {
@@ -20,7 +19,7 @@ const navItems = [
 const isDesktopWidth = () => window.innerWidth >= 900;
 
 const Profile = () => {
-  const { theme } = useTheme();
+  const { theme, mode } = useTheme();
   const [isDesktop, setIsDesktop] = React.useState(isDesktopWidth());
   const navigate = useNavigate();
 
@@ -29,6 +28,21 @@ const Profile = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Button color logic
+  const getButtonStyle = () => {
+    if (mode === 'light') {
+      return {
+        background: '#222',
+        color: '#fff',
+      };
+    } else {
+      return {
+        background: theme.card,
+        color: theme.text,
+      };
+    }
+  };
 
   return (
     <div style={{
@@ -42,13 +56,15 @@ const Profile = () => {
       margin: isDesktop ? undefined : '0 auto',
       boxSizing: 'border-box',
       overflowX: 'hidden',
+      color: theme.text,
+      background: theme.background,
     }}>
       {/* Profile card */}
       <div style={{
         width: isDesktop ? 420 : '100%',
         maxWidth: '100%',
         margin: isDesktop ? '0 auto 32px auto' : '0 auto 24px auto',
-        background: isDesktop ? theme.card : '#e6b8e6',
+        background: theme.card,
         borderRadius: 24,
         boxShadow: isDesktop ? '0 2px 16px 0 #eee' : 'none',
         padding: isDesktop ? '2.5rem 2rem 2rem 2rem' : '1.5rem 1.2rem 1.2rem 1.2rem',
@@ -80,26 +96,24 @@ const Profile = () => {
             key={item.label}
             style={{
               width: '100%',
-              background: isDesktop ? theme.card : '#fff',
-              color: theme.text,
-              border: 'none',
-              borderRadius: 18,
               fontWeight: 700,
-              fontSize: 22,
+              fontSize: 26,
               marginBottom: 0,
               padding: isDesktop ? '1.1rem 0' : '1.1rem 0',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 12,
-              boxShadow: isDesktop ? '0 2px 8px 0 #eee' : 'none',
+              border: 'none',
+              borderRadius: 24,
+              boxShadow: '0 2px 16px 0 #222',
               cursor: 'pointer',
               transition: 'background 0.2s',
               boxSizing: 'border-box',
+              ...getButtonStyle(),
             }}
             onClick={() => navigate(item.route)}
           >
-            {item.icon}
             {item.label}
           </button>
         ))}

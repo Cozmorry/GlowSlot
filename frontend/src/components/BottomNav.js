@@ -1,10 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaHome, FaSearch, FaUser, FaCog } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 
-const BottomNav = () => {
+const BottomNav = ({ onMobileSearch }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, mode } = useTheme();
 
   const navButtonStyle = {
@@ -18,6 +19,12 @@ const BottomNav = () => {
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+  };
+
+  const handleSearchClick = () => {
+    if (onMobileSearch) {
+      onMobileSearch();
+    }
   };
 
   return (
@@ -45,7 +52,7 @@ const BottomNav = () => {
       <button onClick={() => navigate('/home')} style={navButtonStyle} aria-label="Home">
         <FaHome size={22} color={theme.text} />
       </button>
-      <button onClick={() => navigate('/search')} style={navButtonStyle} aria-label="Search">
+      <button onClick={handleSearchClick} style={navButtonStyle} aria-label="Search">
         <FaSearch size={22} color={theme.text} />
       </button>
       <button onClick={() => navigate('/profile')} style={navButtonStyle} aria-label="Profile">
