@@ -12,6 +12,7 @@ import MainLayout from './components/MainLayout';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import FAQs from './pages/FAQs';
+import About from './pages/About';
 
 function App() {
   const [loading, setLoading] = React.useState(true);
@@ -32,6 +33,7 @@ function App() {
           <Route path="/cart" element={<MainLayout><Cart /></MainLayout>} />
           <Route path="/search" element={<MainLayout><Search /></MainLayout>} />
           <Route path="/faqs" element={<MainLayout><FAQs /></MainLayout>} />
+          <Route path="/about" element={<MainLayout><About /></MainLayout>} />
 
           {/* Standalone Routes */}
           <Route path="/signup" element={<Signup />} />
