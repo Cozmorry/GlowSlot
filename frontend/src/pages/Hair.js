@@ -3,7 +3,7 @@ import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-const hairServices = [
+export const hairServices = [
   {
     name: 'Braids',
     price: 'KSH 1500',

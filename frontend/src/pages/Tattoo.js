@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
 
-const tattooServices = [
+export const tattooServices = [
   { name: 'Sleeve', price: 'KSH 1500', rating: 5.0, img: 'https://i.pinimg.com/736x/28/b4/4b/28b44bf220c32c675cf1936dab0f0732.jpg' },
   { name: 'Thigh', price: 'KSH 3500', rating: 5.0, img: 'https://i.pinimg.com/736x/0c/64/6a/0c646a7294c9228114a9738366aa1cd7.jpg' },
   { name: 'Samoan', price: 'KSH 1500', rating: 5.0, img: 'https://i.pinimg.com/736x/a7/30/91/a73091e879de6913380a7f82e5cb24ef.jpg' },

@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
 
-const piercingsServices = [
+export const piercingsServices = [
   { name: 'Lobe', price: 'KSH 300', rating: 5.0, img: 'https://i.pinimg.com/736x/01/7b/dc/017bdc8930e5597df507f6d44768b03f.jpg' },
   { name: 'Helix', price: 'KSH 500', rating: 5.0, img: 'https://i.pinimg.com/736x/86/41/85/8641852683bbe6f51eb1355554859fc8.jpg' },
   { name: 'Double Helix', price: 'KSH 800', rating: 5.0, img: 'https://i.pinimg.com/736x/65/07/9d/65079da3fd25b843779460ec2e031fc1.jpg' },

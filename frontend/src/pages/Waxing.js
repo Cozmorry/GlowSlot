@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
 
-const waxingServices = [
+export const waxingServices = [
   {
     name: 'Brazilian',
     price: 'KSH 3000',

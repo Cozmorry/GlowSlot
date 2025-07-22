@@ -1,27 +1,37 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { FaShoppingCart, FaSearch, FaSun, FaMoon, FaCut, FaUser } from 'react-icons/fa';
+import { FaShoppingCart, FaSearch, FaSun, FaMoon, FaCut, FaUser, FaLayerGroup } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
-
-// Mock data for search suggestions
-const mockServices = [
-  { id: 1, name: 'Haircut' }, { id: 2, name: 'Manicure' }, { id: 3, name: 'Pedicure' },
-  { id: 4, name: 'Waxing' }, { id: 5, name: 'Facial' }, { id: 6, name: 'Massage' },
-];
-const mockStaff = [
-  { id: 1, name: 'Alice Johnson' }, { id: 2, name: 'Bob Williams' }, { id: 3, name: 'Charlie Brown' },
-];
+import { staffData } from '../data/staffData';
+import { hairServices } from './Hair';
+import { nailsServices } from './Nails';
+import { spaServices } from './Spa';
+import { waxingServices } from './Waxing';
+import { barberServices } from './Barber';
+import { piercingsServices } from './Piercings';
+import { tattooServices } from './Tattoo';
 
 const categories = [
-  { name: 'hair', img: 'https://i.pinimg.com/736x/ff/59/a3/ff59a35d3a66209f0f9759864fbc9a9d.jpg' },
-  { name: 'nails', img: 'https://i.pinimg.com/1200x/96/0e/a9/960ea9cf7655e80d9c3f3130389a1f5d.jpg' },
-  { name: 'spa', img: 'https://i.pinimg.com/736x/59/b3/c0/59b3c0e608bfd23632d9991c4050edc5.jpg' },
-  { name: 'waxing', img: 'https://i.pinimg.com/736x/4a/f5/74/4af574c3add1cd9df958a70d6c1b6072.jpg' },
-  { name: 'make-up', img: 'https://i.pinimg.com/736x/b3/f2/d3/b3f2d3458f2868b7ca92e93739fbb1c7.jpg' },
-  { name: 'barber', img: 'https://i.pinimg.com/736x/c0/99/87/c099873629478e002acaabd9697bff6b.jpg' },
-  { name: 'piercing', img: 'https://i.pinimg.com/1200x/90/ea/3b/90ea3b480af218993d8348fe5bb1f9d7.jpg' },
-  { name: 'tattoo', img: 'https://i.pinimg.com/736x/79/a5/cd/79a5cdadbde6f7c11052452248c79862.jpg' },
+  { name: 'Hair', type: 'category', route: '/hair', img: 'https://i.pinimg.com/736x/ff/59/a3/ff59a35d3a66209f0f9759864fbc9a9d.jpg' },
+  { name: 'Nails', type: 'category', route: '/nails', img: 'https://i.pinimg.com/1200x/96/0e/a9/960ea9cf7655e80d9c3f3130389a1f5d.jpg' },
+  { name: 'Spa', type: 'category', route: '/spa', img: 'https://i.pinimg.com/736x/59/b3/c0/59b3c0e608bfd23632d9991c4050edc5.jpg' },
+  { name: 'Waxing', type: 'category', route: '/waxing', img: 'https://i.pinimg.com/736x/4a/f5/74/4af574c3add1cd9df958a70d6c1b6072.jpg' },
+  { name: 'Make Up', type: 'category', route: '/makeup', img: 'https://i.pinimg.com/736x/b3/f2/d3/b3f2d3458f2868b7ca92e93739fbb1c7.jpg' },
+  { name: 'Barber', type: 'category', route: '/barber', img: 'https://i.pinimg.com/736x/c0/99/87/c099873629478e002acaabd9697bff6b.jpg' },
+  { name: 'Piercings', type: 'category', route: '/piercings', img: 'https://i.pinimg.com/1200x/90/ea/3b/90ea3b480af218993d8348fe5bb1f9d7.jpg' },
+  { name: 'Tattoo', type: 'category', route: '/tattoo', img: 'https://i.pinimg.com/736x/79/a5/cd/79a5cdadbde6f7c11052452248c79862.jpg' },
 ];
+
+const allServices = [
+  ...hairServices.map(s => ({ ...s, type: 'service', category: 'Hair' })),
+  ...nailsServices.map(s => ({ ...s, type: 'service', category: 'Nails' })),
+  ...spaServices.map(s => ({ ...s, type: 'service', category: 'Spa' })),
+  ...waxingServices.map(s => ({ ...s, type: 'service', category: 'Waxing' })),
+  ...barberServices.map(s => ({ ...s, type: 'service', category: 'Barber' })),
+  ...piercingsServices.map(s => ({ ...s, type: 'service', category: 'Piercings' })),
+  ...tattooServices.map(s => ({ ...s, type: 'service', category: 'Tattoo' })),
+];
+const allStaff = staffData.map(s => ({ ...s, type: 'staff' }));
 
 const isDesktopWidth = () => window.innerWidth >= 900;
 
@@ -51,8 +61,8 @@ const Home = forwardRef((props, ref) => {
         return;
       }
       const lowerCaseQuery = search.toLowerCase();
-      const filteredServices = mockServices.filter(s => s.name.toLowerCase().includes(lowerCaseQuery));
-      const filteredStaff = mockStaff.filter(s => s.name.toLowerCase().includes(lowerCaseQuery));
+      const filteredServices = allServices.filter(s => s.name.toLowerCase().includes(lowerCaseQuery));
+      const filteredStaff = allStaff.filter(s => s.name.toLowerCase().includes(lowerCaseQuery));
       setSuggestions({ services: filteredServices, staff: filteredStaff });
     }, 250); // 250ms debounce
 
@@ -181,24 +191,47 @@ const Home = forwardRef((props, ref) => {
       {/* On mobile, show suggestions if typing, otherwise show categories */}
       {!isDesktop && search ? (
         <div style={{ width: '100%', background: theme.card, borderRadius: 16, padding: '1rem', boxShadow: '0 2px 8px 0 #eee' }}>
-          {hasSuggestions ? (
+          {suggestions.services.length > 0 || suggestions.staff.length > 0 || categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).length > 0 ? (
             <>
-              {suggestions.services.length > 0 && (
+              {/* Categories */}
+              {categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).length > 0 && (
                 <div style={{ marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: 16, color: theme.text, opacity: 0.7, margin: '0 0 0.5rem 0.5rem' }}>Services</h3>
-                  {suggestions.services.map(s => (
-                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.7rem 0.5rem', borderRadius: 8, cursor: 'pointer', transition: 'background 0.2s' }}>
-                      <FaCut /><span>{s.name}</span>
+                  <h3 style={{ fontSize: 16, color: theme.accent, margin: '0 0 0.5rem 0.5rem', fontWeight: 700, letterSpacing: 1 }}>Categories</h3>
+                  {categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).map(c => (
+                    <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.7rem 0.5rem', borderRadius: 8, cursor: 'pointer', transition: 'background 0.2s', color: theme.text }}
+                      onClick={() => navigate(c.route)}>
+                      <FaLayerGroup color={theme.accent} size={16} />
+                      <span style={{ fontWeight: 500, fontSize: 16 }}>{c.name}</span>
                     </div>
                   ))}
                 </div>
               )}
+              {/* Services */}
+              {suggestions.services.length > 0 && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: 16, color: theme.accent, margin: '0 0 0.5rem 0.5rem', fontWeight: 700, letterSpacing: 1 }}>Services</h3>
+                  {suggestions.services.map((s, i) => (
+                    <div key={s.name + i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.7rem 0.5rem', borderRadius: 8, cursor: 'pointer', transition: 'background 0.2s', color: theme.text }}
+                      onClick={() => navigate(`/${s.category.toLowerCase().replace(/ /g, '-')}`)}>
+                      <img src={s.img} alt={s.name} style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover' }} />
+                      <span style={{ fontWeight: 500, fontSize: 16 }}>{s.name}</span>
+                      <span style={{ color: theme.accent, fontWeight: 600, marginLeft: 8 }}>{s.category}</span>
+                      <span style={{ marginLeft: 'auto', fontWeight: 600 }}>{s.price}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* Staff */}
               {suggestions.staff.length > 0 && (
                 <div>
-                  <h3 style={{ fontSize: 16, color: theme.text, opacity: 0.7, margin: '0 0 0.5rem 0.5rem' }}>Staff</h3>
+                  <h3 style={{ fontSize: 16, color: theme.accent, margin: '0 0 0.5rem 0.5rem', fontWeight: 700, letterSpacing: 1 }}>Staff</h3>
                   {suggestions.staff.map(s => (
-                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.7rem 0.5rem', borderRadius: 8, cursor: 'pointer', transition: 'background 0.2s' }}>
-                      <FaUser /><span>{s.name}</span>
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.7rem 0.5rem', borderRadius: 8, cursor: 'pointer', transition: 'background 0.2s', color: theme.text }}
+                      onClick={() => navigate('/staff')}>
+                      <img src={s.avatar} alt={s.name} style={{ width: 28, height: 28, borderRadius: 14, objectFit: 'cover' }} />
+                      <span style={{ fontWeight: 500, fontSize: 16 }}>{s.name}</span>
+                      <span style={{ color: theme.accent, fontWeight: 600, marginLeft: 8 }}>{s.specialties}</span>
+                      <span style={{ marginLeft: 'auto', fontWeight: 600 }}>⭐ {s.rating}</span>
                     </div>
                   ))}
                 </div>
@@ -234,16 +267,7 @@ const Home = forwardRef((props, ref) => {
                 margin: 0,
                 boxSizing: 'border-box',
               }}
-              onClick={() => {
-                if (cat.name === 'nails') navigate('/nails');
-                if (cat.name === 'hair') navigate('/hair');
-                if (cat.name === 'spa') navigate('/spa');
-                if (cat.name === 'waxing') navigate('/waxing');
-                if (cat.name === 'make-up') navigate('/makeup');
-                if (cat.name === 'barber') navigate('/barber');
-                if (cat.name === 'piercing') navigate('/piercings');
-                if (cat.name === 'tattoo') navigate('/tattoo');
-              }}
+              onClick={() => navigate(cat.route)}
             >
               <div style={{ paddingTop: '100%', position: 'relative' }}>
                 <img

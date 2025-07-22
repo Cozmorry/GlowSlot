@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
 
-const nailsServices = [
+export const nailsServices = [
   {
     name: 'Manicure',
     price: 'KSH 500',

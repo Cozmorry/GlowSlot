@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
 
-const barberServices = [
+export const barberServices = [
   {
     name: 'Taper Fade',
     price: 'KSH 1500',
