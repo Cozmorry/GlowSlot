@@ -20,6 +20,9 @@ import Hair from './pages/Hair';
 import Spa from './pages/Spa';
 import Waxing from './pages/Waxing';
 import MakeUp from './pages/MakeUp';
+import Barber from './pages/Barber';
+import Piercings from './pages/Piercings';
+import Tattoo from './pages/Tattoo';
 
 function App() {
   const [loading, setLoading] = React.useState(true);
@@ -76,6 +79,9 @@ function App() {
           <Route path="/spa" element={<MainLayout><Spa /></MainLayout>} />
           <Route path="/waxing" element={<MainLayout><Waxing /></MainLayout>} />
           <Route path="/makeup" element={<MainLayout><MakeUp /></MainLayout>} />
+          <Route path="/barber" element={<MainLayout><Barber /></MainLayout>} />
+          <Route path="/piercings" element={<MainLayout><Piercings /></MainLayout>} />
+          <Route path="/tattoo" element={<MainLayout><Tattoo /></MainLayout>} />
 
           {/* Standalone Routes */}
           <Route path="/signup" element={<Signup />} />

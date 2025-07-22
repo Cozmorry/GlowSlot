@@ -18,8 +18,8 @@ const categories = [
   { name: 'spa', img: 'https://i.pinimg.com/736x/59/b3/c0/59b3c0e608bfd23632d9991c4050edc5.jpg' },
   { name: 'waxing', img: 'https://i.pinimg.com/736x/4a/f5/74/4af574c3add1cd9df958a70d6c1b6072.jpg' },
   { name: 'make-up', img: 'https://i.pinimg.com/736x/b3/f2/d3/b3f2d3458f2868b7ca92e93739fbb1c7.jpg' },
-  { name: 'barber', img: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=400&q=80' },
-  { name: 'piercing', img: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=400&q=80' },
+  { name: 'barber', img: 'https://i.pinimg.com/736x/c0/99/87/c099873629478e002acaabd9697bff6b.jpg' },
+  { name: 'piercing', img: 'https://i.pinimg.com/1200x/90/ea/3b/90ea3b480af218993d8348fe5bb1f9d7.jpg' },
   { name: 'tattoo', img: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80' },
 ];
 
@@ -240,6 +240,9 @@ const Home = forwardRef((props, ref) => {
                 if (cat.name === 'spa') navigate('/spa');
                 if (cat.name === 'waxing') navigate('/waxing');
                 if (cat.name === 'make-up') navigate('/makeup');
+                if (cat.name === 'barber') navigate('/barber');
+                if (cat.name === 'piercing') navigate('/piercings');
+                if (cat.name === 'tattoo') navigate('/tattoo');
               }}
             >
               <div style={{ paddingTop: '100%', position: 'relative' }}>

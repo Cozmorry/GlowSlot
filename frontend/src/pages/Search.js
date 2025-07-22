@@ -43,7 +43,7 @@ export default function Search() {
 
   // Remove desktop-only restriction so it works on mobile
   // if (!isDesktop) return null;
-
+  
   const hasSuggestions = suggestions.services.length > 0 || suggestions.staff.length > 0;
 
   return (
