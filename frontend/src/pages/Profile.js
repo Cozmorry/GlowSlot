@@ -33,7 +33,7 @@ const Profile = () => {
   const getButtonStyle = () => {
     if (mode === 'light') {
       return {
-        background: '#222',
+        background: theme.accent,
         color: '#fff',
       };
     } else {

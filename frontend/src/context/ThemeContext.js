@@ -3,19 +3,19 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 const ThemeContext = createContext();
 
 const lightTheme = {
-  background: '#f5c6ea',
-  card: '#fff',
-  text: '#222',
-  accent: '#ff6f91',
-  input: '#f7f7fa',
-  border: '#e3c6f7',
+  background: '#FFFFFF', // White
+  card: '#F5F5F5', // Light Grey
+  text: '#333333', // Dark Grey for text
+  accent: '#D72660', // Darker Pink
+  input: '#F5F5F5', // Light Grey
+  border: '#DDDDDD', // Lighter Grey for borders
 };
 
 const darkTheme = {
   background: '#1a1a1a',
   card: '#232323',
   text: '#fff',
-  accent: '#ff6f91',
+  accent: '#D72660', // Darker Pink
   input: '#2a2a2a',
   border: '#444',
 };

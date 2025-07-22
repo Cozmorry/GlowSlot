@@ -96,7 +96,7 @@ const Home = forwardRef((props, ref) => {
             marginBottom: '1rem',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontWeight: 700, fontSize: 24, color: theme.text, letterSpacing: 1 }}>GlowSlot</span>
+              <span style={{ fontWeight: 700, fontSize: 24, color: theme.accent, letterSpacing: 1 }}>GlowSlot</span>
               <button
                 onClick={toggleTheme}
                 style={{ 
@@ -115,7 +115,7 @@ const Home = forwardRef((props, ref) => {
                 {mode === 'dark' ? <FaSun /> : <FaMoon />}
               </button>
             </div>
-            <span style={{ fontWeight: 900, fontSize: 20, color: theme.text, letterSpacing: 1 }}>Discover</span>
+            <span style={{ fontWeight: 900, fontSize: 20, color: theme.accent, letterSpacing: 1 }}>Discover</span>
           </div>
           {/* Search bar and cart icon, stretched across */}
           <div style={{

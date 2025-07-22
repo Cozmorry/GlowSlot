@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaHome, FaSearch, FaUser, FaCog } from 'react-icons/fa';
+import { FaHome, FaSearch, FaUser, FaCog, FaUsers } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 
 const BottomNav = ({ onMobileSearch }) => {
@@ -50,16 +50,19 @@ const BottomNav = ({ onMobileSearch }) => {
       }}
     >
       <button onClick={() => navigate('/home')} style={navButtonStyle} aria-label="Home">
-        <FaHome size={22} color={theme.text} />
+        <FaHome size={22} color={location.pathname === '/home' || location.pathname === '/' ? theme.accent : theme.text} />
       </button>
       <button onClick={handleSearchClick} style={navButtonStyle} aria-label="Search">
-        <FaSearch size={22} color={theme.text} />
+        <FaSearch size={22} color={location.pathname === '/search' ? theme.accent : theme.text} />
+      </button>
+      <button onClick={() => navigate('/staff')} style={navButtonStyle} aria-label="Staff">
+        <FaUsers size={22} color={location.pathname === '/staff' ? theme.accent : theme.text} />
       </button>
       <button onClick={() => navigate('/profile')} style={navButtonStyle} aria-label="Profile">
-        <FaUser size={22} color={theme.text} />
+        <FaUser size={22} color={location.pathname === '/profile' ? theme.accent : theme.text} />
       </button>
       <button onClick={() => navigate('/settings')} style={navButtonStyle} aria-label="Settings">
-        <FaCog size={22} color={theme.text} />
+        <FaCog size={22} color={location.pathname === '/settings' ? theme.accent : theme.text} />
       </button>
     </nav>
   );
