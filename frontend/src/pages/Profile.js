@@ -12,6 +12,7 @@ const user = {
 const navItems = [
   { label: 'Book with us', route: '/book' },
   { label: 'Staff', route: '/staff' },
+  { label: 'Services', route: '/services' },
   { label: 'About us', route: '/about' },
   { label: 'FAQs', route: '/faqs' },
 ];

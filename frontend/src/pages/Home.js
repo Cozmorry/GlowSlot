@@ -13,9 +13,9 @@ const mockStaff = [
 ];
 
 const categories = [
-  { name: 'hair', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80' },
-  { name: 'nails', img: 'https://images.unsplash.com/photo-1512499617640-c2f999098c01?auto=format&fit=crop&w=400&q=80' },
-  { name: 'spa', img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80' },
+  { name: 'hair', img: 'https://i.pinimg.com/736x/ff/59/a3/ff59a35d3a66209f0f9759864fbc9a9d.jpg' },
+  { name: 'nails', img: 'https://i.pinimg.com/1200x/96/0e/a9/960ea9cf7655e80d9c3f3130389a1f5d.jpg' },
+  { name: 'spa', img: 'https://i.pinimg.com/736x/59/b3/c0/59b3c0e608bfd23632d9991c4050edc5.jpg' },
   { name: 'waxing', img: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=400&q=80' },
   { name: 'make-up', img: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=400&q=80' },
   { name: 'barber', img: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=400&q=80' },
@@ -233,6 +233,11 @@ const Home = forwardRef((props, ref) => {
                 cursor: 'pointer',
                 margin: 0,
                 boxSizing: 'border-box',
+              }}
+              onClick={() => {
+                if (cat.name === 'nails') navigate('/nails');
+                if (cat.name === 'hair') navigate('/hair');
+                if (cat.name === 'spa') navigate('/spa');
               }}
             >
               <div style={{ paddingTop: '100%', position: 'relative' }}>

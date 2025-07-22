@@ -14,6 +14,10 @@ import Login from './pages/Login';
 import FAQs from './pages/FAQs';
 import About from './pages/About';
 import Staff from './pages/Staff';
+import Services from './pages/Services';
+import Nails from './pages/Nails';
+import Hair from './pages/Hair';
+import Spa from './pages/Spa';
 
 function App() {
   const [loading, setLoading] = React.useState(true);
@@ -64,6 +68,10 @@ function App() {
           <Route path="/faqs" element={<MainLayout><FAQs /></MainLayout>} />
           <Route path="/about" element={<MainLayout><About /></MainLayout>} />
           <Route path="/staff" element={<MainLayout><Staff /></MainLayout>} />
+          <Route path="/services" element={<MainLayout><Services /></MainLayout>} />
+          <Route path="/nails" element={<MainLayout><Nails /></MainLayout>} />
+          <Route path="/hair" element={<MainLayout><Hair /></MainLayout>} />
+          <Route path="/spa" element={<MainLayout><Spa /></MainLayout>} />
 
           {/* Standalone Routes */}
           <Route path="/signup" element={<Signup />} />
