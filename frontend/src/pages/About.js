@@ -38,7 +38,17 @@ export default function About() {
         border: isDesktop ? undefined : `1.5px solid ${mode === 'dark' ? '#444' : '#e3c6f7'}`,
         color: theme.text,
       }}>
-        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80" alt="GlowSlot Team" style={{ width: '100%', height: 90, objectFit: 'cover', borderTopLeftRadius: 18, borderTopRightRadius: 18 }} />
+        <div style={{
+          fontWeight: 900,
+          fontSize: 48,
+          color: theme.accent,
+          textAlign: 'center',
+          margin: '2rem 0',
+          letterSpacing: 2,
+          fontFamily: 'Poppins, Arial Black, Arial, sans-serif',
+        }}>
+          GlowSlot
+        </div>
         <div style={{ padding: '1.2rem 1.2rem 1.2rem 1.2rem', fontSize: 15, color: theme.text }}>
           <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 17 }}>Welcome to GlowSlot!</div>
           <div style={{ marginBottom: 14, lineHeight: 1.6 }}>

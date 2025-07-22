@@ -3,12 +3,12 @@ import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
 
 const tattooServices = [
-  { name: 'Sleeve', price: 'KSH 1500', rating: 5.0, img: 'https://images.pexels.com/photos/1707826/pexels-photo-1707826.jpeg?auto=compress&w=400' },
-  { name: 'Thigh', price: 'KSH 3500', rating: 5.0, img: 'https://images.pexels.com/photos/3771836/pexels-photo-3771836.jpeg?auto=compress&w=400' },
-  { name: 'Samoan', price: 'KSH 1500', rating: 5.0, img: 'https://images.pexels.com/photos/3771837/pexels-photo-3771837.jpeg?auto=compress&w=400' },
-  { name: 'Tribal', price: 'KSH 800', rating: 5.0, img: 'https://images.pexels.com/photos/3771838/pexels-photo-3771838.jpeg?auto=compress&w=400' },
-  { name: 'Writing', price: 'KSH 500', rating: 5.0, img: 'https://images.pexels.com/photos/3771839/pexels-photo-3771839.jpeg?auto=compress&w=400' },
-  { name: 'Tatto removal', price: 'KSH 1500', rating: 5.0, img: 'https://images.pexels.com/photos/3771840/pexels-photo-3771840.jpeg?auto=compress&w=400' },
+  { name: 'Sleeve', price: 'KSH 1500', rating: 5.0, img: 'https://i.pinimg.com/736x/28/b4/4b/28b44bf220c32c675cf1936dab0f0732.jpg' },
+  { name: 'Thigh', price: 'KSH 3500', rating: 5.0, img: 'https://i.pinimg.com/736x/0c/64/6a/0c646a7294c9228114a9738366aa1cd7.jpg' },
+  { name: 'Samoan', price: 'KSH 1500', rating: 5.0, img: 'https://i.pinimg.com/736x/a7/30/91/a73091e879de6913380a7f82e5cb24ef.jpg' },
+  { name: 'Tribal', price: 'KSH 800', rating: 5.0, img: 'https://i.pinimg.com/736x/a8/bd/03/a8bd037c1cd5af42a13c41c6889113b4.jpg' },
+  { name: 'Writing', price: 'KSH 500', rating: 5.0, img: 'https://i.pinimg.com/1200x/f1/f0/50/f1f050ca8029f06104381aed9f7e2bd5.jpg' },
+  { name: 'Tatto removal', price: 'KSH 1500', rating: 5.0, img: 'https://i.pinimg.com/1200x/48/50/93/485093562e1802b0771e207ac57c26fd.jpg' },
 ];
 
 export default function Tattoo() {
@@ -32,7 +32,7 @@ export default function Tattoo() {
         boxShadow: '0 2px 8px 0 #eee',
         position: 'relative',
       }}>
-        <img src="https://i.pinimg.com/1200x/90/ea/3b/90ea3b480af218993d8348fe5bb1f9d7.jpg" alt="Wash and Blowdry" style={{ width: '100%', borderRadius: 12, marginBottom: 8, objectFit: 'cover', maxHeight: 120 }} />
+        <img src="https://i.pinimg.com/736x/79/a5/cd/79a5cdadbde6f7c11052452248c79862.jpg" alt="Wash and Blowdry" style={{ width: '100%', borderRadius: 12, marginBottom: 8, objectFit: 'cover', maxHeight: 120 }} />
         <div style={{
           position: 'absolute',
           left: '50%',

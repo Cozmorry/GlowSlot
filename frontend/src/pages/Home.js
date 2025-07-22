@@ -20,7 +20,7 @@ const categories = [
   { name: 'make-up', img: 'https://i.pinimg.com/736x/b3/f2/d3/b3f2d3458f2868b7ca92e93739fbb1c7.jpg' },
   { name: 'barber', img: 'https://i.pinimg.com/736x/c0/99/87/c099873629478e002acaabd9697bff6b.jpg' },
   { name: 'piercing', img: 'https://i.pinimg.com/1200x/90/ea/3b/90ea3b480af218993d8348fe5bb1f9d7.jpg' },
-  { name: 'tattoo', img: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80' },
+  { name: 'tattoo', img: 'https://i.pinimg.com/736x/79/a5/cd/79a5cdadbde6f7c11052452248c79862.jpg' },
 ];
 
 const isDesktopWidth = () => window.innerWidth >= 900;
