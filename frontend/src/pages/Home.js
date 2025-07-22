@@ -16,7 +16,7 @@ const categories = [
   { name: 'hair', img: 'https://i.pinimg.com/736x/ff/59/a3/ff59a35d3a66209f0f9759864fbc9a9d.jpg' },
   { name: 'nails', img: 'https://i.pinimg.com/1200x/96/0e/a9/960ea9cf7655e80d9c3f3130389a1f5d.jpg' },
   { name: 'spa', img: 'https://i.pinimg.com/736x/59/b3/c0/59b3c0e608bfd23632d9991c4050edc5.jpg' },
-  { name: 'waxing', img: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=400&q=80' },
+  { name: 'waxing', img: 'https://i.pinimg.com/736x/4a/f5/74/4af574c3add1cd9df958a70d6c1b6072.jpg' },
   { name: 'make-up', img: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=400&q=80' },
   { name: 'barber', img: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=400&q=80' },
   { name: 'piercing', img: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=400&q=80' },
@@ -238,6 +238,7 @@ const Home = forwardRef((props, ref) => {
                 if (cat.name === 'nails') navigate('/nails');
                 if (cat.name === 'hair') navigate('/hair');
                 if (cat.name === 'spa') navigate('/spa');
+                if (cat.name === 'waxing') navigate('/waxing');
               }}
             >
               <div style={{ paddingTop: '100%', position: 'relative' }}>

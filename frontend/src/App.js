@@ -18,6 +18,7 @@ import Services from './pages/Services';
 import Nails from './pages/Nails';
 import Hair from './pages/Hair';
 import Spa from './pages/Spa';
+import Waxing from './pages/Waxing';
 
 function App() {
   const [loading, setLoading] = React.useState(true);
@@ -72,6 +73,7 @@ function App() {
           <Route path="/nails" element={<MainLayout><Nails /></MainLayout>} />
           <Route path="/hair" element={<MainLayout><Hair /></MainLayout>} />
           <Route path="/spa" element={<MainLayout><Spa /></MainLayout>} />
+          <Route path="/waxing" element={<MainLayout><Waxing /></MainLayout>} />
 
           {/* Standalone Routes */}
           <Route path="/signup" element={<Signup />} />
