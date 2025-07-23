@@ -26,15 +26,50 @@ const CartItem = ({ booking, theme }) => {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ margin: '0 0 8px 0', color: theme.primary, fontSize: '18px' }}>{booking.service}</h3>
-        <span style={{ 
-          backgroundColor: booking.status === 'pending' ? theme.warning : theme.success,
-          color: booking.status === 'pending' ? theme.warningText : theme.successText,
-          padding: '4px 8px',
-          borderRadius: '4px',
-          fontSize: '14px'
-        }}>
-          {booking.status}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={async () => {
+              if (window.confirm('Are you sure you want to cancel this booking?')) {
+                try {
+                  const response = await fetch(`http://localhost:5000/api/bookings/${booking._id}`, {
+                    method: 'DELETE'
+                  });
+                  if (response.ok) {
+                    // Call the parent's onCancel handler to remove from state
+                    booking.onCancel && booking.onCancel(booking._id);
+                  } else {
+                    alert('Failed to cancel booking. Please try again.');
+                  }
+                } catch (error) {
+                  console.error('Error canceling booking:', error);
+                  alert('Error canceling booking. Please try again.');
+                }
+              }
+            }}
+            style={{
+              backgroundColor: '#FF69B4',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            Cancel
+          </button>
+          {booking.status === 'confirmed' && (
+            <span style={{ 
+              backgroundColor: theme.success,
+              color: theme.successText,
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}>
+              {booking.status}
+            </span>
+          )}
+        </div>
       </div>
       
       <div style={{ marginTop: '12px', color: theme.text, fontSize: '14px' }}>
@@ -49,6 +84,14 @@ const CartItem = ({ booking, theme }) => {
         </p>
         <p style={{ margin: '4px 0' }}>
           <strong style={{ color: '#FF69B4' }}>Contact:</strong> {booking.phone}
+        </p>
+        <p style={{ 
+          margin: '8px 0 0 0',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          color: '#FF69B4'
+        }}>
+          KSH {booking.price || 0}
         </p>
       </div>
     </div>

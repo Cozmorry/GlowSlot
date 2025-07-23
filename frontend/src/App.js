@@ -23,6 +23,7 @@ import MakeUp from './pages/MakeUp';
 import Barber from './pages/Barber';
 import Piercings from './pages/Piercings';
 import Tattoo from './pages/Tattoo';
+import Checkout from './pages/Checkout';
 
 function App() {
   const [loading, setLoading] = React.useState(true);
@@ -86,6 +87,7 @@ function App() {
           {/* Standalone Routes */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

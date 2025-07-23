@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 import CartItem from '../components/CartItem';
 
 const isDesktopWidth = () => window.innerWidth >= 900;
 
 export default function Cart() {
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const [isDesktop, setIsDesktop] = React.useState(isDesktopWidth());
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const calculateTotal = () => {
+    return bookings.reduce((total, booking) => total + (booking.price || 0), 0);
+  };
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(isDesktopWidth());
@@ -39,14 +45,22 @@ export default function Cart() {
     }
   };
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div style={{ color: 'red' }}>{error}</div>;
+  }
+
   return (
     <div style={{
       width: '100%',
       maxWidth: isDesktop ? '100%' : 430,
       margin: isDesktop ? undefined : '0 auto',
+      padding: isDesktop ? '2rem' : '1rem',
       boxSizing: 'border-box',
       overflowX: 'hidden',
-      padding: isDesktop ? '2rem' : '1rem',
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
@@ -70,21 +84,7 @@ export default function Cart() {
       }}>
         <h2 style={{ fontWeight: 700, fontSize: 24, marginBottom: 24, color: theme.text }}>My Bookings</h2>
         
-        {loading ? (
-          <div style={{ padding: '20px', color: theme.text }}>Loading...</div>
-        ) : error ? (
-          <div style={{ 
-            padding: '20px',
-            color: '#842029',
-            backgroundColor: '#F8D7DA',
-            border: '1px solid #F5C2C7',
-            borderRadius: '4px',
-            width: '100%',
-            boxSizing: 'border-box'
-          }}>
-            {error}
-          </div>
-        ) : bookings.length === 0 ? (
+        {bookings.length === 0 ? (
           <div style={{ 
             textAlign: 'center',
             padding: '40px',
@@ -101,10 +101,58 @@ export default function Cart() {
             {bookings.map(booking => (
               <CartItem 
                 key={booking._id} 
-                booking={booking}
+                booking={{
+                  ...booking,
+                  onCancel: (bookingId) => {
+                    setBookings(currentBookings => 
+                      currentBookings.filter(b => b._id !== bookingId)
+                    );
+                  }
+                }}
                 theme={theme}
               />
             ))}
+            <div style={{
+              marginTop: '20px',
+              borderTop: `1px solid ${theme.border}`,
+              paddingTop: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '15px'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '18px',
+                fontWeight: 'bold'
+              }}>
+                <span>Total:</span>
+                <span style={{ color: '#FF69B4' }}>KSH {calculateTotal()}</span>
+              </div>
+              <button
+                onClick={() => {
+                  const total = calculateTotal();
+                  localStorage.setItem('cartTotal', total);
+                  navigate('/checkout', { state: { total } });
+                }}
+                style={{
+                  backgroundColor: bookings.length === 0 ? '#ffc0dc' : '#FF69B4',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  cursor: bookings.length === 0 ? 'not-allowed' : 'pointer',
+                  width: '100%',
+                  transition: 'background-color 0.2s',
+                  opacity: bookings.length === 0 ? 0.7 : 1
+                }}
+                disabled={bookings.length === 0}
+              >
+                Proceed to Checkout
+              </button>
+            </div>
           </div>
         )}
       </div>

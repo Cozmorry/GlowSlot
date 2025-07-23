@@ -22,7 +22,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 .catch((err) => console.error('MongoDB connection error:', err));
 
 const authRoutes = require('./routes/auth');
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 
 const bookingRoutes = require('./routes/bookings');
 app.use('/api/bookings', bookingRoutes);

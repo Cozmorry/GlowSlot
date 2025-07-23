@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { signInWithGoogle } from '../config/firebase';
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -25,6 +26,7 @@ const Login = () => {
       if (res.ok && data.token) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('userId', data.user.id);  // Store the MongoDB _id
         navigate('/dashboard');
       } else {
         setError(data.message || 'Login failed');
@@ -35,9 +37,26 @@ const Login = () => {
     setLoading(false);
   };
 
-  const handleGoogleSignIn = () => {
-    // Placeholder: Implement Google sign-in popup logic here
-    alert('Google sign-in coming soon!');
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await signInWithGoogle();
+      
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('userId', data.user.id);
+        navigate('/');
+      } else {
+        setError('Google sign-in failed');
+      }
+    } catch (err) {
+      console.error('Google sign-in error:', err);
+      setError(err.message || 'Error during Google sign-in');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSkip = () => {
@@ -150,14 +169,20 @@ const Login = () => {
             type="button"
             onClick={handleGoogleSignIn}
             style={{
-              background: 'none',
-              border: 'none',
+              background: '#fff',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
               cursor: 'pointer',
-              padding: 0,
+              fontSize: '14px',
+              color: '#333'
             }}
-            aria-label="Sign in with Google"
           >
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png" alt="Google" style={{ width: 36, height: 36, borderRadius: 8 }} />
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" style={{ width: 18, height: 18 }} />
+            Sign in with Google
           </button>
         </div>
         <div style={{ textAlign: 'center', color: '#222', marginTop: 24, marginBottom: 8 }}>

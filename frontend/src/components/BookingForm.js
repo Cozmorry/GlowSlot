@@ -13,7 +13,13 @@ export default function BookingForm({ open, onClose, service, onSuccess }) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/bookings', {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user || !user.id) {
+        throw new Error('Please login to make a booking');
+      }
+      const userId = user.id;
+
+      const res = await fetch('http://localhost:5000/api/bookings/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -21,8 +27,8 @@ export default function BookingForm({ open, onClose, service, onSuccess }) {
           phone, 
           service, 
           dateTime,
-          // If you have a logged-in user, you should include userId
-          // userId: localStorage.getItem('userId') || null 
+          category: 'makeup',
+          userId
         }),
       });
       const data = await res.json();

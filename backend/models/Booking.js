@@ -1,13 +1,15 @@
 const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
-  fullName: { type: String, required: true },
-  phone: { type: String, required: true },
   service: { type: String, required: true },
-  staff: { type: String, required: true },
-  dateTime: { type: Date, required: true },
+  price: { type: Number, required: true },
+  staff: { type: String },
+  fullName: { type: String },
+  phone: { type: String },
+  dateTime: { type: Date },
   status: { type: String, enum: ['pending', 'confirmed', 'completed', 'cancelled'], default: 'pending' },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
+  category: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdAt: { type: Date, default: Date.now },
 });
 

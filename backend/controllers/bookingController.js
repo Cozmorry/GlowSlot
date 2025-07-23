@@ -1,10 +1,127 @@
-const Booking = require('../models/Booking');
+const BookingModel = require('../models/Booking');
+const { getServicePrice } = require('../data/servicePrices');
 const User = require('../models/User');
 const staffData = require('../data/staffData');
+
+exports.addToCart = async (req, res) => {
+  try {
+    const { service, fullName, phone, dateTime, userId } = req.body;
+
+    if (!service || !fullName || !phone || !dateTime) {
+      return res.status(400).json({ 
+        message: 'Service, full name, phone number, and date/time are required' 
+      });
+    }
+
+    if (!userId) {
+      return res.status(400).json({ message: 'Please login to make a booking' });
+    }
+
+    // Convert string userId to ObjectId
+    const mongoose = require('mongoose');
+    let userObjectId;
+    try {
+      userObjectId = new mongoose.Types.ObjectId(userId);
+    } catch (error) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+
+    // Get price based on service
+    const price = getServicePrice(service);
+    if (!price) {
+      return res.status(400).json({ message: 'Invalid service' });
+    }
+    
+    // Default category to 'makeup' for now since this is from makeup page
+    const category = 'makeup';
+
+    const newBooking = new BookingModel({
+      service,
+      price,
+      category,
+      status: 'pending',
+      fullName,
+      phone,
+      dateTime: dateTime ? new Date(dateTime) : undefined,
+      userId: userObjectId  // Use the converted ObjectId
+    });
+
+    // Assign staff based on service type
+    newBooking.staff = assignRandomStaff(service);
+
+    await newBooking.save();
+    res.status(201).json(newBooking);
+  } catch (error) {
+    console.error('Error adding to cart:', error);
+    res.status(500).json({ message: 'Error adding service to cart' });
+  }
+};
+
+exports.updateBookingStatus = async (req, res) => {
+  try {
+    const { status, userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'UserId is required' });
+    }
+
+    if (!status || !['pending', 'confirmed', 'completed', 'cancelled'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+    
+    // Convert string userId to ObjectId
+    const mongoose = require('mongoose');
+    let userObjectId;
+    try {
+      userObjectId = new mongoose.Types.ObjectId(userId);
+    } catch (error) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+
+    // Update all pending bookings for this user
+    const result = await BookingModel.updateMany(
+      { 
+        userId: userObjectId, 
+        status: 'pending'  // Only update pending bookings
+      },
+      { 
+        $set: { 
+          status: status,
+          dateTime: status === 'confirmed' ? new Date() : undefined
+        } 
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: 'No pending bookings found for this user' });
+    }
+
+    res.status(200).json({ 
+      message: 'Booking status updated successfully',
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Error updating booking status:', error);
+    res.status(500).json({ 
+      message: 'Error updating booking status',
+      error: error.message
+    });
+  }
+};
 
 // Helper: assign random staff who offers the service
 function assignRandomStaff(service) {
   console.log('Original service:', service);
+  
+  // Check if the service directly contains 'tattoo' or 'sleeve'
+  if (service.toLowerCase().includes('tattoo') || service.toLowerCase().includes('sleeve')) {
+    const tattooStaff = staffData.filter(staff => 
+      staff.specialties.toLowerCase().includes('tattoo')
+    );
+    if (tattooStaff.length > 0) {
+      return tattooStaff[Math.floor(Math.random() * tattooStaff.length)].name;
+    }
+  }
   
   // Default categories for ambiguous services
   const defaultCategories = {
@@ -25,7 +142,16 @@ function assignRandomStaff(service) {
     'feet': 'nails',         // Plural of foot
     'hair': 'hair',          // Default hair treatments to hair service
     'beard': 'barber',       // Default beard services to barber
-    'skin': 'spa'           // Default skin treatments to spa
+    'skin': 'spa',          // Default skin treatments to spa
+    'sleeve': 'tattoo',     // Sleeve tattoo
+    'arm': 'tattoo',        // Arm tattoo
+    'leg': 'tattoo',        // Leg tattoo
+    'back': 'tattoo',       // Back tattoo
+    'chest': 'tattoo',      // Chest tattoo
+    'small': 'tattoo',      // Small tattoo
+    'medium': 'tattoo',     // Medium tattoo
+    'large': 'tattoo',      // Large tattoo
+    'custom': 'tattoo'      // Custom tattoo
   };
 
   // Map specific services to general categories
@@ -319,11 +445,19 @@ exports.createBooking = async (req, res) => {
     
     if (!staff) return res.status(400).json({ message: 'No staff available for this service.' });
     
-    const bookingData = { fullName, phone, service, staff, dateTime };
+    const price = getServicePrice(service);
+    const bookingData = { 
+      fullName, 
+      phone, 
+      service, 
+      staff, 
+      dateTime,
+      price 
+    };
     if (userId) bookingData.userId = userId;
     
     console.log('Creating booking with data:', bookingData);
-    const booking = new Booking(bookingData);
+    const booking = new BookingModel(bookingData);
     await booking.save();
     
     console.log('Booking created successfully:', booking);
@@ -343,6 +477,33 @@ exports.getCartBookings = async (req, res) => {
   try {
     const { userId } = req.query;
     const bookings = await Booking.find({ userId, status: 'pending' });
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching cart bookings', error: err.message });
+  }
+};
+
+// Delete a booking
+exports.deleteBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await BookingModel.findByIdAndDelete(id);
+    
+    if (!result) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    
+    res.status(200).json({ message: 'Booking cancelled successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error cancelling booking', error: err.message });
+  }
+};
+
+// Get cart bookings for a user
+exports.getCartBookings = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const bookings = await BookingModel.find({ userId, status: 'pending' });
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching cart bookings', error: err.message });
