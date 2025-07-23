@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
+import BookingForm from '../components/BookingForm';
 
 export const barberServices = [
   {
@@ -31,6 +32,8 @@ export const barberServices = [
 
 export default function Barber() {
   const { theme } = useTheme();
+  const [bookingOpen, setBookingOpen] = React.useState(false);
+  const [selectedService, setSelectedService] = React.useState('');
   return (
     <div style={{
       background: theme.background,
@@ -97,10 +100,11 @@ export default function Barber() {
               fontWeight: 700,
               cursor: 'pointer',
               boxShadow: '0 1px 6px 0 #eee',
-            }}>Book Now</button>
+            }} onClick={() => { setSelectedService(service.name); setBookingOpen(true); }}>Book Now</button>
           </div>
         </div>
       ))}
+      <BookingForm open={bookingOpen} onClose={() => setBookingOpen(false)} service={selectedService} />
     </div>
   );
 } 

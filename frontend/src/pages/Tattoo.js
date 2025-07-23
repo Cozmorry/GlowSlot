@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
+import BookingForm from '../components/BookingForm';
 
 export const tattooServices = [
   { name: 'Sleeve', price: 'KSH 1500', rating: 5.0, img: 'https://i.pinimg.com/736x/28/b4/4b/28b44bf220c32c675cf1936dab0f0732.jpg' },
@@ -13,6 +14,8 @@ export const tattooServices = [
 
 export default function Tattoo() {
   const { theme } = useTheme();
+  const [bookingOpen, setBookingOpen] = React.useState(false);
+  const [selectedService, setSelectedService] = React.useState('');
   return (
     <div style={{
       background: theme.background,
@@ -79,10 +82,11 @@ export default function Tattoo() {
               fontWeight: 700,
               cursor: 'pointer',
               boxShadow: '0 1px 6px 0 #eee',
-            }}>Book Now</button>
+            }} onClick={() => { setSelectedService(service.name); setBookingOpen(true); }}>Book Now</button>
           </div>
         </div>
       ))}
+      <BookingForm open={bookingOpen} onClose={() => setBookingOpen(false)} service={selectedService} />
     </div>
   );
 } 

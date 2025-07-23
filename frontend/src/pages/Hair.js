@@ -2,6 +2,7 @@ import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import BookingForm from '../components/BookingForm';
 
 export const hairServices = [
   {
@@ -45,6 +46,8 @@ export const hairServices = [
 export default function Hair() {
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const [bookingOpen, setBookingOpen] = React.useState(false);
+  const [selectedService, setSelectedService] = React.useState('');
   return (
     <div style={{
       background: theme.background,
@@ -129,10 +132,11 @@ export default function Hair() {
               fontWeight: 700,
               cursor: 'pointer',
               boxShadow: '0 1px 6px 0 #eee',
-            }}>Book Now</button>
+            }} onClick={() => { setSelectedService(service.name); setBookingOpen(true); }}>Book Now</button>
           </div>
         </div>
       ))}
+      <BookingForm open={bookingOpen} onClose={() => setBookingOpen(false)} service={selectedService} />
     </div>
   );
 } 
