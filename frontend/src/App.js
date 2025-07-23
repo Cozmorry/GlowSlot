@@ -1,9 +1,10 @@
 import React from 'react';
 import './App.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-import Profile from './pages/Profile';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import Profile from './pages/Profile';
 import LoadingPage from './pages/LoadingPage';
 import Settings from './pages/Settings';
 import Cart from './pages/Cart';
@@ -62,10 +63,11 @@ function App() {
   if (loading) return <LoadingPage />;
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Routes with MainLayout */}
-          <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Redirect root to login */}
+          <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/home" element={<MainLayout><Home /></MainLayout>} />
           <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} />
           <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
@@ -83,13 +85,14 @@ function App() {
           <Route path="/barber" element={<MainLayout><Barber /></MainLayout>} />
           <Route path="/piercings" element={<MainLayout><Piercings /></MainLayout>} />
           <Route path="/tattoo" element={<MainLayout><Tattoo /></MainLayout>} />
-
-          {/* Standalone Routes */}
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
           <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
+
+            {/* Standalone Routes */}
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
         </Routes>
       </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

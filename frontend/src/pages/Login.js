@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signInWithGoogle } from '../config/firebase';
-
 const Login = () => {
+  const navigate = useNavigate();
+
+  // Check if user is already logged in and redirect immediately
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      navigate('/home'); // Redirect to home page instead of showing logout screen
+    }
+  }, [navigate]);
+
+  // Rest of your login component code...
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -26,8 +35,8 @@ const Login = () => {
       if (res.ok && data.token) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('userId', data.user.id);  // Store the MongoDB _id
-        navigate('/dashboard');
+        localStorage.setItem('userId', data.user.id);
+        navigate('/home'); // Navigate to home after successful login
       } else {
         setError(data.message || 'Login failed');
       }
@@ -42,12 +51,12 @@ const Login = () => {
       setLoading(true);
       setError('');
       const data = await signInWithGoogle();
-      
+
       if (data.token) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('userId', data.user.id);
-        navigate('/');
+        navigate('/home');
       } else {
         setError('Google sign-in failed');
       }
@@ -63,17 +72,17 @@ const Login = () => {
     localStorage.setItem('guest', 'true');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate('/dashboard');
+    navigate('/home');
   };
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#f5c6ea',
-    }}>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f5c6ea',
+      }}>
       <form
         onSubmit={handleSubmit}
         style={{

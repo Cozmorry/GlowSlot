@@ -25,20 +25,35 @@ export default function Cart() {
 
   useEffect(() => {
     fetchBookings();
-  }, []);
-
-  const fetchBookings = async () => {
+  }, []);const fetchBookings = async () => {
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:5000/api/bookings/cart');
+      
+      // Check if user is logged in
+      const userJson = localStorage.getItem('user');
+      if (!userJson) {
+        setError('Please login to view your bookings');
+        setLoading(false);
+        return;
+      }
+      
+      const user = JSON.parse(userJson);
+      if (!user || !user.id) {
+        setError('Please login to view your bookings');
+        setLoading(false);
+        return;
+      }
+      
+      const res = await fetch(`http://localhost:5000/api/bookings/cart?userId=${user.id}`);
       const data = await res.json();
       
       if (res.ok) {
-        setBookings(data);
+        setBookings(Array.isArray(data) ? data : []);
       } else {
         setError(data.message || 'Failed to fetch bookings');
       }
     } catch (err) {
+      console.error('Error fetching bookings:', err);
       setError('Network error while fetching bookings');
     } finally {
       setLoading(false);
@@ -47,10 +62,48 @@ export default function Cart() {
 
   if (loading) {
     return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div style={{ color: 'red' }}>{error}</div>;
+  }if (error) {
+    // If the error is about not being logged in, show a nicer message with a login button
+    if (error.includes('Please login')) {
+      return (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '70vh',
+          padding: '20px',
+          textAlign: 'center',
+          color: theme.text
+        }}>
+          <div style={{ marginBottom: '20px', fontSize: '18px' }}>
+            Please login to view your bookings
+          </div>
+          <button
+            onClick={() => navigate('/login')}
+            style={{
+              padding: '10px 24px',
+              background: theme.accent,
+              color: 'white',
+              border: 'none',
+              borderRadius: '24px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '600'
+            }}
+          >
+            Login Now
+          </button>
+        </div>
+      );
+    }
+    
+    return <div style={{ 
+      color: 'red', 
+      padding: '20px', 
+      textAlign: 'center',
+      marginTop: '20px'
+    }}>{error}</div>;
   }
 
   return (

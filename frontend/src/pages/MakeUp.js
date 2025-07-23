@@ -2,149 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { FaStar } from 'react-icons/fa';
 
-// Booking form modal component
-const BookingForm = ({ service, onClose, onSubmit, theme }) => {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    dateTime: ''
-  });
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit({
-      service: service.name, // Just pass the service name
-      ...formData  // This includes fullName, phone, dateTime
-    });
-  };
-
-  return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: theme.background,
-        padding: '20px',
-        borderRadius: '8px',
-        width: '90%',
-        maxWidth: '400px'
-      }}>
-        <h3 style={{ color: theme.text, marginBottom: '20px' }}>Book {service.name}</h3>
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ color: theme.text, display: 'block', marginBottom: '5px' }}>
-              Full Name
-            </label>
-            <input
-              type="text"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '4px',
-                border: `1px solid ${theme.border}`,
-                backgroundColor: theme.background,
-                color: theme.text
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ color: theme.text, display: 'block', marginBottom: '5px' }}>
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '4px',
-                border: `1px solid ${theme.border}`,
-                backgroundColor: theme.background,
-                color: theme.text
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ color: theme.text, display: 'block', marginBottom: '5px' }}>
-              Preferred Date & Time
-            </label>
-            <input
-              type="datetime-local"
-              name="dateTime"
-              value={formData.dateTime}
-              onChange={handleChange}
-              required
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '4px',
-                border: `1px solid ${theme.border}`,
-                backgroundColor: theme.background,
-                color: theme.text
-              }}
-            />
-          </div>
-          <div style={{
-            display: 'flex',
-            gap: '10px',
-            justifyContent: 'flex-end'
-          }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '4px',
-                border: `1px solid ${theme.border}`,
-                backgroundColor: theme.background,
-                color: theme.text,
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              style={{
-                padding: '8px 16px',
-                borderRadius: '4px',
-                border: 'none',
-                backgroundColor: '#FF69B4',
-                color: 'white',
-                cursor: 'pointer'
-              }}
-            >
-              Book Now
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
+import BookingForm from '../components/BookingForm';
 
 const makeUpServices = [
   {
@@ -181,49 +39,9 @@ export default function MakeUp() {
   const { theme } = useTheme();
 
   const [bookingStatus, setBookingStatus] = useState('');
-  const [selectedService, setSelectedService] = useState(null);
-
-  const handleBooking = async (bookingData) => {
-    try {
-      const booking = {
-        service: bookingData.service, // Changed from bookingData.name
-        fullName: bookingData.fullName,
-        phone: bookingData.phone,
-        dateTime: bookingData.dateTime
-      };
-      
-      console.log('Sending booking data:', booking);
-      
-      // Set minimum date to current date/time
-      const minDateTime = new Date();
-      const bookingDateTime = new Date(booking.dateTime);
-      
-      if (bookingDateTime < minDateTime) {
-        throw new Error('Please select a future date and time');
-      }
-
-      const response = await fetch('http://localhost:5000/api/bookings/cart', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(booking)
-      });
-
-      const data = await response.json();
-      console.log('Response data:', data);
-      
-      if (response.ok) {
-        setBookingStatus('Service added to cart successfully!');
-        setTimeout(() => setBookingStatus(''), 3000);
-      } else {
-        throw new Error(data.message || 'Failed to add booking to cart');
-      }
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      setBookingStatus(error.message || 'Failed to add service to cart. Please try again.');
-      setTimeout(() => setBookingStatus(''), 3000);
-    }
+  const [selectedService, setSelectedService] = useState(null);const handleBookingSuccess = () => {
+    setBookingStatus('Service added to cart successfully!');
+    setTimeout(() => setBookingStatus(''), 3000);
   };
   return (
     <div style={{
@@ -298,8 +116,7 @@ export default function MakeUp() {
             <div style={{ display: 'flex', alignItems: 'center', fontSize: 16, color: theme.accent, fontWeight: 700 }}>
               <FaStar color="#FFD700" size={18} style={{ marginRight: 4 }} />
               <span style={{ fontWeight: 700, color: theme.text, fontSize: 16 }}>{service.rating.toFixed(1)}</span>
-            </div>
-            <button
+            </div><button
               onClick={() => setSelectedService(service)}
               style={{
                 background: theme.accent,
@@ -316,15 +133,12 @@ export default function MakeUp() {
               Book Now
             </button>
             
-            {selectedService && (
-              <BookingForm
-                service={selectedService}
+            {selectedService && (<BookingForm
+                open={true}
+                service={selectedService.name}
                 onClose={() => setSelectedService(null)}
-                onSubmit={(bookingData) => {
-                  handleBooking(bookingData);
-                  setSelectedService(null);
-                }}
-                theme={theme}
+                onSuccess={handleBookingSuccess}
+                category="makeup"
               />
             )}
           </div>

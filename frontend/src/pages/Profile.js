@@ -1,14 +1,6 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-
-const user = {
-  name: 'JACKSON',
-  phone: '+25471234567',
-  email: 'jackson69@gmail.com',
-  avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-};
-
 const navItems = [
   { label: 'Book with us', route: '/book' },
   { label: 'Staff', route: '/staff' },
@@ -23,12 +15,28 @@ const Profile = () => {
   const { theme, mode } = useTheme();
   const [isDesktop, setIsDesktop] = React.useState(isDesktopWidth());
   const navigate = useNavigate();
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    // Check for user data
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   React.useEffect(() => {
     const handleResize = () => setIsDesktop(isDesktopWidth());
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    setUser(null);
+                navigate('/login');
+};
 
   // Button color logic
   const getButtonStyle = () => {
@@ -59,8 +67,7 @@ const Profile = () => {
       overflowX: 'hidden',
       color: theme.text,
       background: theme.background,
-    }}>
-      {/* Profile card */}
+    }}>{/* Profile card */}
       <div style={{
         width: isDesktop ? 420 : '100%',
         maxWidth: '100%',
@@ -74,21 +81,57 @@ const Profile = () => {
         alignItems: 'center',
         boxSizing: 'border-box',
       }}>
-        <img
-          src={user.avatar}
-          alt="avatar"
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            border: '3px solid #fff',
-            objectFit: 'cover',
-            marginBottom: 16,
-          }}
-        />
-        <span style={{ fontWeight: 700, fontSize: 18, color: theme.text, marginBottom: 4 }}>{user.name}</span>
-        <span style={{ fontSize: 14, color: theme.text, opacity: 0.8, marginBottom: 2 }}>{user.phone}</span>
-        <span style={{ fontSize: 14, color: theme.text, opacity: 0.8 }}>{user.email}</span>
+        {user ? (
+          <>
+            <img
+              src={user.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg'}
+              alt="avatar"
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                border: '3px solid #fff',
+                objectFit: 'cover',
+                marginBottom: 16,
+              }}
+            />
+            <span style={{ fontWeight: 700, fontSize: 18, color: theme.text, marginBottom: 4 }}>{user.name}</span>
+            <span style={{ fontSize: 14, color: theme.text, opacity: 0.8, marginBottom: 2 }}>{user.phone || 'No phone added'}</span>
+            <span style={{ fontSize: 14, color: theme.text, opacity: 0.8 }}>{user.email}</span>
+            <button
+              onClick={handleLogout}
+              style={{
+                marginTop: 16,
+                padding: '8px 24px',
+                background: theme.accent,
+                color: '#fff',
+                border: 'none',
+                borderRadius: 16,
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => navigate('/login')}
+            style={{
+              padding: '12px 32px',
+              background: theme.accent,
+              color: '#fff',
+              border: 'none',
+              borderRadius: 20,
+              cursor: 'pointer',
+              fontSize: 16,
+              fontWeight: 600,
+            }}
+          >
+            Login
+          </button>
+        )}
       </div>
       {/* Action buttons */}
       <div style={{ width: isDesktop ? 420 : '100%', maxWidth: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box' }}>

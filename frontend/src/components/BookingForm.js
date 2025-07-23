@@ -1,25 +1,66 @@
 import React, { useState } from 'react';
 
-
 import Modal from './Modal';
 
-export default function BookingForm({ open, onClose, service, onSuccess }) {
+export default function BookingForm({ open, onClose, service, onSuccess, category }) {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [dateTime, setDateTime] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');const handleSubmit = async (e) => {
+
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    try {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (!user || !user.id) {
-        throw new Error('Please login to make a booking');
-      }
-      const userId = user.id;
 
-      const res = await fetch('http://localhost:5000/api/bookings/cart', {
+    try {
+      // Check if user is logged in
+      const userJson = localStorage.getItem('user');
+      if (!userJson) {
+        setError('Please login to make a booking');
+        setLoading(false);
+        return;
+      }
+      
+      const user = JSON.parse(userJson);
+      if (!user || !user.id) {
+        setError('Please login to make a booking');
+        setLoading(false);
+        return;
+      }
+      
+
+      const userId = user.id;
+      // Determine the category based on the service name or use the provided category
+      let serviceCategory = category || 'general';
+      
+      // Logic to determine category from service if not provided
+      if (!category) {
+        const serviceKeywords = {
+          'hair': ['hair', 'braid', 'loc', 'wig', 'cut', 'dye', 'style', 'perm', 'weave'],
+          'nails': ['nail', 'manicure', 'pedicure', 'polish', 'gel'],
+          'spa': ['massage', 'facial', 'scrub', 'body', 'therapy', 'treat'],
+          'waxing': ['wax', 'thread', 'hair removal', 'eyebrow'],
+          'makeup': ['makeup', 'lash', 'brow', 'face', 'glam'],
+          'barber': ['beard', 'shave', 'trim', 'fade', 'cut'],
+          'piercing': ['pierce', 'earring', 'nose', 'body'],
+          'tattoo': ['tattoo', 'ink', 'design']
+        };
+        
+        const lowerService = service.toLowerCase();
+        for (const [cat, keywords] of Object.entries(serviceKeywords)) {
+          if (keywords.some(keyword => lowerService.includes(keyword))) {
+            serviceCategory = cat;
+            break;
+          }
+        }
+      }
+      
+      console.log('Sending booking with category:', serviceCategory);
+
+      const res = await fetch('http://localhost:5000/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -27,11 +68,13 @@ export default function BookingForm({ open, onClose, service, onSuccess }) {
           phone, 
           service, 
           dateTime,
-          category: 'makeup',
-          userId
+          userId,
+          category: serviceCategory
         }),
       });
+
       const data = await res.json();
+
       if (res.ok) {
         // Show success message and close modal
         alert(data.message || 'Booking successful! You can view your booking in the cart.');
@@ -42,8 +85,10 @@ export default function BookingForm({ open, onClose, service, onSuccess }) {
         setError(data.message || 'Booking failed. Please try again or contact support.');
       }
     } catch (err) {
+      console.error('Error in booking:', err);
       setError('Network error');
     }
+
     setLoading(false);
   };
 

@@ -136,7 +136,16 @@ export default function Hair() {
           </div>
         </div>
       ))}
-      <BookingForm open={bookingOpen} onClose={() => setBookingOpen(false)} service={selectedService} />
+      <BookingForm 
+        open={bookingOpen} 
+        onClose={() => setBookingOpen(false)} 
+        service={selectedService} 
+        category="hair"
+        onSuccess={() => {
+          alert("Booking added to cart successfully!");
+          setBookingOpen(false);
+        }}
+      />
     </div>
   );
 } 

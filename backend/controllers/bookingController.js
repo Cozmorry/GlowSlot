@@ -433,11 +433,38 @@ function assignRandomStaff(service) {
   
   if (eligible.length === 0) return null;
   return eligible[Math.floor(Math.random() * eligible.length)].name;
-}// POST /api/bookings
+
+}
+// POST /api/bookings
 exports.createBooking = async (req, res) => {
   try {
     console.log('Received booking request:', req.body);
-    const { fullName, phone, service, dateTime, userId } = req.body;
+    const { fullName, phone, service, dateTime, userId, category } = req.body;
+    
+    if (!service) {
+      return res.status(400).json({ message: 'Service is required' });
+    }
+    
+    if (!fullName || !phone || !dateTime) {
+      return res.status(400).json({ message: 'Name, phone, and date/time are required' });
+    }
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'Please login to make a booking' });
+    }
+    
+    if (!category) {
+      return res.status(400).json({ message: 'Category is required' });
+    }
+
+    // Convert string userId to ObjectId if it's a string
+    let userObjectId;
+    try {
+      const mongoose = require('mongoose');
+      userObjectId = typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
+    } catch (error) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
     
     console.log('Looking for staff with service:', service);
     const staff = assignRandomStaff(service);
@@ -445,16 +472,20 @@ exports.createBooking = async (req, res) => {
     
     if (!staff) return res.status(400).json({ message: 'No staff available for this service.' });
     
-    const price = getServicePrice(service);
+    const price = getServicePrice(service) || 1000; // Default price if not found
+
+
     const bookingData = { 
       fullName, 
       phone, 
       service, 
       staff, 
-      dateTime,
-      price 
+      dateTime: new Date(dateTime),
+      price,
+
+      category,
+      userId: userObjectId
     };
-    if (userId) bookingData.userId = userId;
     
     console.log('Creating booking with data:', bookingData);
     const booking = new BookingModel(bookingData);
@@ -476,7 +507,8 @@ exports.createBooking = async (req, res) => {
 exports.getCartBookings = async (req, res) => {
   try {
     const { userId } = req.query;
-    const bookings = await Booking.find({ userId, status: 'pending' });
+
+    const bookings = await BookingModel.find({ userId, status: 'pending' });
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching cart bookings', error: err.message });
@@ -499,13 +531,13 @@ exports.deleteBooking = async (req, res) => {
   }
 };
 
-// Get cart bookings for a user
-exports.getCartBookings = async (req, res) => {
-  try {
-    const { userId } = req.query;
-    const bookings = await BookingModel.find({ userId, status: 'pending' });
-    res.json(bookings);
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching cart bookings', error: err.message });
-  }
-}; 
+
+
+
+
+
+
+
+
+
+
