@@ -270,8 +270,8 @@ export default function Settings() {
               </div>
             </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontWeight: 500, fontSize: 15, color: theme.text, opacity: 0.7 }}>Name</label>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontWeight: 500, fontSize: 15, color: theme.text, opacity: 0.7, display: 'block', marginBottom: 6 }}>Name</label>
               <input
                 type="text"
                 value={name}
@@ -282,16 +282,15 @@ export default function Settings() {
                   padding: '0.7rem',
                   borderRadius: 8,
                   border: `1px solid ${theme.border}`,
-                  marginTop: 4,
                   fontSize: 16,
                   background: theme.input,
                   color: theme.text,
-                  marginBottom: 8,
+                  boxSizing: 'border-box'
                 }}
               />
             </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontWeight: 500, fontSize: 15, color: theme.text, opacity: 0.7 }}>Email</label>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontWeight: 500, fontSize: 15, color: theme.text, opacity: 0.7, display: 'block', marginBottom: 6 }}>Email</label>
               <input
                 type="email"
                 value={email}
@@ -302,16 +301,15 @@ export default function Settings() {
                   padding: '0.7rem',
                   borderRadius: 8,
                   border: `1px solid ${theme.border}`,
-                  marginTop: 4,
                   fontSize: 16,
                   background: theme.input,
                   color: theme.text,
-                  marginBottom: 8,
+                  boxSizing: 'border-box'
                 }}
               />
             </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontWeight: 500, fontSize: 15, color: theme.text, opacity: 0.7 }}>Phone</label>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontWeight: 500, fontSize: 15, color: theme.text, opacity: 0.7, display: 'block', marginBottom: 6 }}>Phone</label>
               <input
                 type="tel"
                 value={phone}
@@ -322,11 +320,10 @@ export default function Settings() {
                   padding: '0.7rem',
                   borderRadius: 8,
                   border: `1px solid ${theme.border}`,
-                  marginTop: 4,
                   fontSize: 16,
                   background: theme.input,
                   color: theme.text,
-                  marginBottom: 8,
+                  boxSizing: 'border-box'
                 }}
               />
             </div>
