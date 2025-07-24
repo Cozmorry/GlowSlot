@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaHome, FaSearch, FaUser, FaCog, FaUsers } from 'react-icons/fa';
+import { FaHome, FaSearch, FaUser, FaCog, FaUsers, FaStar } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 
 const BottomNav = ({ onMobileSearch }) => {
@@ -54,6 +54,9 @@ const BottomNav = ({ onMobileSearch }) => {
       </button>
       <button onClick={handleSearchClick} style={navButtonStyle} aria-label="Search">
         <FaSearch size={22} color={location.pathname === '/search' ? theme.accent : theme.text} />
+      </button>
+      <button onClick={() => navigate('/reviews')} style={navButtonStyle} aria-label="Reviews">
+        <FaStar size={22} color={location.pathname === '/reviews' ? theme.accent : theme.text} />
       </button>
       <button onClick={() => navigate('/staff')} style={navButtonStyle} aria-label="Staff">
         <FaUsers size={22} color={location.pathname === '/staff' ? theme.accent : theme.text} />

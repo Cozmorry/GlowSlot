@@ -7,12 +7,13 @@ export default function AdminDashboard() {
   console.log('AdminDashboard component mounting...');
   
   const navigate = useNavigate();
-  const { user: authUser, logout, getToken } = useAuth();
+  const { user: authUser, logout, getToken, loading: authLoading } = useAuth();
   const { showError } = useNotification();
   console.log('AdminDashboard hooks initialized successfully');
   const [activeTab, setActiveTab] = useState('overview');
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -21,7 +22,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
-    if (tabParam && ['overview', 'appointments', 'stats', 'users', 'settings'].includes(tabParam)) {
+    if (tabParam && ['overview', 'appointments', 'stats', 'users', 'reviews', 'settings'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, []);
@@ -47,6 +48,12 @@ export default function AdminDashboard() {
 
   // Listen for auth changes
   useEffect(() => {
+    // Wait for auth to finish loading before checking user
+    if (authLoading) {
+      console.log('Auth is still loading...');
+      return;
+    }
+
     console.log('AdminDashboard authUser:', authUser);
     console.log('AdminDashboard authUser type:', typeof authUser);
     console.log('AdminDashboard authUser keys:', authUser ? Object.keys(authUser) : 'null');
@@ -70,7 +77,8 @@ export default function AdminDashboard() {
     console.log('User is admin, setting user and fetching stats');
     setUser(authUser);
     fetchStats();
-  }, [authUser, navigate, logout]);
+    fetchReviews();
+  }, [authUser, authLoading, navigate, logout]);
 
 
 
@@ -78,6 +86,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const token = getToken();
+      console.log('Fetching admin stats with token:', token ? 'Token exists' : 'No token');
       
       const response = await fetch('http://localhost:5000/api/admin/stats', {
         headers: {
@@ -85,17 +94,50 @@ export default function AdminDashboard() {
         }
       });
       
+      console.log('Stats response status:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Stats response error:', errorText);
         throw new Error('Failed to fetch statistics');
       }
       
       const data = await response.json();
+      console.log('Stats data received:', data);
       setStats(data);
     } catch (error) {
       console.error('Error fetching admin stats:', error);
       setError('Failed to load dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const token = getToken();
+      console.log('Fetching reviews with token:', token ? 'Token exists' : 'No token');
+      
+      const response = await fetch('http://localhost:5000/api/reviews', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log('Reviews response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Reviews data received:', data);
+        console.log('First review rating:', data[0]?.rating, 'Type:', typeof data[0]?.rating);
+        console.log('All review ratings:', data.map(r => ({ rating: r.rating, type: typeof r.rating })));
+        setReviews(data);
+      } else {
+        const errorText = await response.text();
+        console.error('Reviews response error:', errorText);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
     }
   };
 
@@ -123,6 +165,42 @@ export default function AdminDashboard() {
           backdropFilter: 'blur(10px)',
       }}>
         Loading dashboard...
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while auth is being validated
+  if (authLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        background: 'linear-gradient(135deg, #f5c6ea 0%, #e91e63 100%)',
+        color: '#fff'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          padding: '30px',
+          borderRadius: '12px',
+          backdropFilter: 'blur(10px)',
+          textAlign: 'center',
+          maxWidth: '400px'
+        }}>
+          <div style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>🔐 Validating Session</div>
+          <div style={{ fontSize: '14px', color: '#ffebee', marginBottom: '20px' }}>Please wait while we verify your authentication...</div>
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            border: '3px solid rgba(255, 255, 255, 0.3)', 
+            borderTop: '3px solid white', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto'
+          }}></div>
         </div>
       </div>
     );
@@ -285,6 +363,7 @@ export default function AdminDashboard() {
               { id: 'appointments', label: 'Appointments', icon: '📅' },
               { id: 'stats', label: 'Stats', icon: '📈' },
               { id: 'users', label: 'Users', icon: '👥' },
+              { id: 'reviews', label: 'Reviews', icon: '⭐' },
               { id: 'settings', label: 'Settings', icon: '⚙️' }
             ].map(tab => (
                               <button
@@ -340,6 +419,7 @@ export default function AdminDashboard() {
                 { id: 'appointments', label: 'Appointments', icon: '📅' },
                 { id: 'stats', label: 'Statistics', icon: '📈' },
                 { id: 'users', label: 'Users', icon: '👥' },
+                { id: 'reviews', label: 'Reviews', icon: '⭐' },
                 { id: 'settings', label: 'Settings', icon: '⚙️' }
               ].map(tab => (
                               <div
@@ -392,6 +472,7 @@ export default function AdminDashboard() {
             {activeTab === 'appointments' && <AppointmentsTab isMobile={isMobile} showError={showError} />}
             {activeTab === 'stats' && <StatsTab stats={stats} isMobile={isMobile} />}
             {activeTab === 'users' && <UsersTab isMobile={isMobile} />}
+            {activeTab === 'reviews' && <ReviewsTab reviews={reviews} isMobile={isMobile} />}
             {activeTab === 'settings' && <SettingsTab isMobile={isMobile} />}
         </div>
       </div>
@@ -1374,6 +1455,192 @@ function SettingsTab({ isMobile }) {
         <h3 style={{ margin: '0 0 8px 0', color: '#2d3748' }}>Settings Coming Soon</h3>
         <p style={{ margin: 0 }}>Advanced settings and configuration options will be available here.</p>
       </div>
+    </div>
+  );
+}
+
+// Reviews Tab Component
+function ReviewsTab({ reviews, isMobile }) {
+  const renderStars = (rating) => {
+    // Ensure rating is a number and clamp it between 0 and 5
+    const numericRating = Math.min(Math.max(Number(rating) || 0, 0), 5);
+    
+    console.log('renderStars called with rating:', rating, 'numericRating:', numericRating);
+    
+    const stars = [];
+    for (let i = 0; i < 5; i++) {
+      const isFilled = i < numericRating;
+      console.log(`Star ${i + 1}: isFilled = ${isFilled} (index ${i} < ${numericRating})`);
+      stars.push(
+        <span 
+          key={i} 
+          style={{ 
+            color: isFilled ? '#fbbf24' : '#e5e7eb', 
+            fontSize: '16px',
+            marginRight: '2px'
+          }}
+        >
+          ⭐
+        </span>
+      );
+    }
+    return stars;
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: '30px' }}>
+        <h2 style={{ 
+          margin: '0 0 8px 0', 
+          fontSize: '24px', 
+          fontWeight: '700',
+          color: '#2d3748'
+        }}>
+          Staff Reviews
+        </h2>
+        <p style={{ 
+          margin: 0, 
+          color: '#718096',
+          fontSize: '16px'
+        }}>
+          Monitor customer reviews and feedback for all staff members
+        </p>
+      </div>
+
+      {reviews.length === 0 ? (
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          padding: '40px',
+          borderRadius: '12px',
+          border: '1px solid rgba(233, 30, 99, 0.1)',
+          textAlign: 'center',
+          color: '#718096'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⭐</div>
+          <h3 style={{ margin: '0 0 8px 0', color: '#2d3748' }}>No Reviews Yet</h3>
+          <p style={{ margin: 0 }}>Customer reviews will appear here once they start reviewing staff members.</p>
+        </div>
+      ) : (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+          {reviews.map(review => {
+            console.log('Rendering review:', review);
+            console.log('Review rating:', review.rating, 'Type:', typeof review.rating);
+            return (
+            <div key={review._id} style={{
+              background: 'rgba(255, 255, 255, 0.8)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: '1px solid rgba(233, 30, 99, 0.1)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = 'none';
+            }}
+            >
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: '12px',
+                flexWrap: isMobile ? 'wrap' : 'nowrap',
+                gap: '12px'
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '8px'
+                  }}>
+                    <h3 style={{ 
+                      margin: 0, 
+                      fontSize: '18px', 
+                      fontWeight: '600',
+                      color: '#2d3748'
+                    }}>
+                      {review.staffName}
+                    </h3>
+                    <span style={{
+                      background: 'rgba(233, 30, 99, 0.1)',
+                      color: '#e91e63',
+                      padding: '4px 8px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: '500'
+                    }}>
+                      Staff
+                    </span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '8px'
+                  }}>
+                    <span style={{ color: '#4a5568', fontSize: '14px' }}>
+                      Reviewed by: {review.customerName}
+                    </span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    {renderStars(review.rating)}
+                    <span style={{ color: '#4a5568', fontSize: '14px' }}>
+                      {review.rating}/5 stars
+                    </span>
+                  </div>
+                </div>
+                <div style={{
+                  textAlign: 'right',
+                  color: '#718096',
+                  fontSize: '12px'
+                }}>
+                  {formatDate(review.createdAt)}
+                </div>
+              </div>
+              
+              <div style={{
+                background: 'rgba(233, 30, 99, 0.05)',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid rgba(233, 30, 99, 0.1)'
+              }}>
+                <p style={{
+                  margin: 0,
+                  color: '#2d3748',
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  fontStyle: 'italic'
+                }}>
+                  "{review.comment}"
+                </p>
+              </div>
+            </div>
+          );
+          })}
+        </div>
+      )}
     </div>
   );
 }

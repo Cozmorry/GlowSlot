@@ -29,5 +29,6 @@ router.get('/verify-email', authController.verifyEmail);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 router.put('/profile/:userId', auth, authController.updateProfile);
+router.get('/validate', auth, authController.validateToken);
 
 module.exports = router; 

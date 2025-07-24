@@ -5,113 +5,125 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tabId] = useState(() => {
-    // Try to get existing tabId from localStorage
-    let existingTabId = localStorage.getItem('currentTabId');
-    if (!existingTabId) {
-      // Generate new tabId if none exists
-      existingTabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('currentTabId', existingTabId);
+
+  // Function to validate token with backend
+  const validateToken = async (token) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/validate', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return { valid: true, user: data.user };
+      } else {
+        return { valid: false, user: null };
+      }
+    } catch (error) {
+      console.error('Token validation error:', error);
+      return { valid: false, user: null };
     }
-    return existingTabId;
-  });
+  };
 
   useEffect(() => {
-    // Check for user data in localStorage for this specific tab
-    const storedUser = localStorage.getItem(`user_${tabId}`);
-    console.log('Loading stored user for tabId:', tabId, 'Stored user:', storedUser);
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      console.log('Parsed user data:', parsedUser);
-      setUser(parsedUser);
-    }
-    setLoading(false);
-
-    // Listen for storage changes from other tabs (but only for global auth changes)
-    const handleStorageChange = (e) => {
-      // Only respond to global auth changes, not tab-specific ones
-      if (e.key === 'global_auth_change') {
-        const changeData = JSON.parse(e.newValue || '{}');
-        if (changeData.tabId !== tabId) {
-          // Another tab changed auth, but we keep our own state
-          // Only clear if it's a logout event
-          if (changeData.action === 'logout' && changeData.userId === user?.id) {
-            setUser(null);
-            localStorage.removeItem(`user_${tabId}`);
+    const initializeAuth = async () => {
+      // Check for user data in localStorage
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('token');
+      
+      console.log('Loading stored user data');
+      console.log('Stored user exists:', !!storedUser);
+      console.log('Stored token exists:', !!storedToken);
+      
+      // Debug: Check all localStorage keys
+      console.log('All localStorage keys:', Object.keys(localStorage));
+      
+      if (storedUser && storedToken) {
+        const parsedUser = JSON.parse(storedUser);
+        console.log('Parsed user data:', parsedUser);
+        
+        // Validate token with backend
+        const validation = await validateToken(storedToken);
+        
+        if (validation.valid) {
+          console.log('Token is valid, setting user');
+          console.log('Validation user data:', validation.user);
+          console.log('Parsed user data:', parsedUser);
+          console.log('User role from validation:', validation.user?.role);
+          console.log('User role from localStorage:', parsedUser?.role);
+          
+          // Use the user data from validation (backend) instead of localStorage
+          console.log('Setting user from validation:', validation.user);
+          
+          // Check if there's a role mismatch between stored and validated user
+          if (parsedUser && parsedUser.role !== validation.user.role) {
+            console.log('Role mismatch detected! Clearing all auth data');
+            console.log('Stored role:', parsedUser.role, 'Validated role:', validation.user.role);
+            
+            // Clear all auth-related localStorage data
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
           }
+          
+          setUser(validation.user);
+        } else {
+          console.log('Token is invalid, clearing auth data');
+          // Clear invalid auth data
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          setUser(null);
         }
+      } else {
+        console.log('No stored user or token found');
+        setUser(null);
       }
+      
+      setLoading(false);
     };
 
-    // Listen for custom auth change events (same tab)
-    const handleAuthChange = (e) => {
-      if (e.detail.tabId === tabId) {
-        setUser(e.detail.user);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('authChange', handleAuthChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('authChange', handleAuthChange);
-    };
-  }, [tabId, user?.id]);
+    initializeAuth();
+  }, []);
 
   const login = (userData) => {
     console.log('Login called with userData:', userData);
     setUser(userData);
-    localStorage.setItem(`user_${tabId}`, JSON.stringify(userData));
-    localStorage.setItem(`token_${tabId}`, userData.token || '');
-    localStorage.setItem(`userId_${tabId}`, userData.id || '');
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('token', userData.token || '');
+    localStorage.setItem('userId', userData.id || '');
     localStorage.removeItem('guest');
-    // Dispatch custom event for immediate tab synchronization
-    window.dispatchEvent(new CustomEvent('authChange', { detail: { user: userData, tabId } }));
-    // Notify other tabs about the login (but don't force them to change)
-    localStorage.setItem('global_auth_change', JSON.stringify({
-      action: 'login',
-      tabId,
-      userId: userData.id,
-      timestamp: Date.now()
-    }));
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem(`user_${tabId}`);
-    localStorage.removeItem(`token_${tabId}`);
-    localStorage.removeItem(`userId_${tabId}`);
-    localStorage.removeItem('currentTabId');
-    // Dispatch custom event for immediate tab synchronization
-    window.dispatchEvent(new CustomEvent('authChange', { detail: { user: null, tabId } }));
-    // Notify other tabs about the logout
-    localStorage.setItem('global_auth_change', JSON.stringify({
-      action: 'logout',
-      tabId,
-      userId: user?.id,
-      timestamp: Date.now()
-    }));
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
   };
 
   const setGuest = () => {
     setUser(null);
     localStorage.setItem('guest', 'true');
-    localStorage.removeItem(`user_${tabId}`);
-    localStorage.removeItem(`token_${tabId}`);
-    localStorage.removeItem(`userId_${tabId}`);
-    localStorage.removeItem('currentTabId');
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
   };
 
   const getToken = () => {
-    const token = localStorage.getItem(`token_${tabId}`);
-    console.log('Getting token for tabId:', tabId, 'Token:', token ? 'Found' : 'Not found');
+    const token = localStorage.getItem('token');
+    console.log('Getting token:', token ? 'Found' : 'Not found');
     return token;
   };
-  const getUserId = () => localStorage.getItem(`userId_${tabId}`);
+  const getUserId = () => localStorage.getItem('userId');
 
   const updateUser = (updatedUserData) => {
     setUser(updatedUserData);
-    localStorage.setItem(`user_${tabId}`, JSON.stringify(updatedUserData));
+    localStorage.setItem('user', JSON.stringify(updatedUserData));
   };
 
   return (

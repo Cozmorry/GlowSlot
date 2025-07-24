@@ -494,4 +494,29 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, googleAuth, verifyEmail, forgotPassword, resetPassword, updateProfile }; 
+const validateToken = async (req, res) => {
+  try {
+    // The auth middleware has already verified the token and attached the user
+    // We just need to return the user data
+    const userResponse = {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      phone: req.user.phone,
+      avatar: req.user.avatar,
+      role: req.user.role,
+      verified: req.user.verified,
+      authProvider: req.user.authProvider
+    };
+
+    res.json({ 
+      message: 'Token is valid', 
+      user: userResponse 
+    });
+  } catch (error) {
+    console.error('Token validation error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = { signup, login, googleAuth, verifyEmail, forgotPassword, resetPassword, updateProfile, validateToken }; 

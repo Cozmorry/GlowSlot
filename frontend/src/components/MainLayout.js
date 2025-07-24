@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { FaHome, FaSearch, FaShoppingCart, FaUser, FaCog, FaSun, FaMoon } from 'react-icons/fa';
+import { FaHome, FaSearch, FaShoppingCart, FaUser, FaCog, FaSun, FaMoon, FaStar } from 'react-icons/fa';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../hooks/useIsMobile';
 import BottomNav from './BottomNav';
@@ -39,6 +39,7 @@ const DesktopSidebar = ({ theme, mode, toggleTheme }) => (
       <span style={{ fontWeight: 700, fontSize: 26, color: theme.text, letterSpacing: 1, marginBottom: 36, alignSelf: 'center' }}>GlowSlot</span>
       <Link to="/home" style={{ color: theme.text, textDecoration: 'none', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 18, padding: '10px 16px', width: 'calc(100% - 16px)', marginLeft: 8, marginRight: 8, borderRadius: 10, transition: 'background 0.15s', boxSizing: 'border-box', overflow: 'hidden' }}><FaHome size={22} />Discover</Link>
       <Link to="/search" style={{ color: theme.text, textDecoration: 'none', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 18, padding: '10px 16px', width: 'calc(100% - 16px)', marginLeft: 8, marginRight: 8, borderRadius: 10, transition: 'background 0.15s', boxSizing: 'border-box', overflow: 'hidden' }}><FaSearch size={22} />Search</Link>
+      <Link to="/reviews" style={{ color: theme.text, textDecoration: 'none', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 18, padding: '10px 16px', width: 'calc(100% - 16px)', marginLeft: 8, marginRight: 8, borderRadius: 10, transition: 'background 0.15s', boxSizing: 'border-box', overflow: 'hidden' }}><FaStar size={22} />Reviews</Link>
       <Link to="/cart" style={{ color: theme.text, textDecoration: 'none', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 18, padding: '10px 16px', width: 'calc(100% - 16px)', marginLeft: 8, marginRight: 8, borderRadius: 10, transition: 'background 0.15s', boxSizing: 'border-box', overflow: 'hidden' }}><FaShoppingCart size={22} />Cart</Link>
       <Link to="/profile" style={{ color: theme.text, textDecoration: 'none', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 18, padding: '10px 16px', width: 'calc(100% - 16px)', marginLeft: 8, marginRight: 8, borderRadius: 10, transition: 'background 0.15s', boxSizing: 'border-box', overflow: 'hidden' }}><FaUser size={22} />Profile</Link>
       <Link to="/settings" style={{ color: theme.text, textDecoration: 'none', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, fontSize: 18, padding: '10px 16px', width: 'calc(100% - 16px)', marginLeft: 8, marginRight: 8, borderRadius: 10, transition: 'background 0.15s', boxSizing: 'border-box', overflow: 'hidden' }}><FaCog size={22} />Settings</Link>

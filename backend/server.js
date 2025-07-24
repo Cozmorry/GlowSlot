@@ -31,6 +31,10 @@ app.use('/api/bookings', bookingRoutes);
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
 
+const reviewRoutes = require('./routes/reviews');
+app.use('/api/reviews', reviewRoutes);
+app.use('/reviews', reviewRoutes);
+
 app.get('/', (req, res) => {
   res.send('API is running...');
 });

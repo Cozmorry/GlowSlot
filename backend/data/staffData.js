@@ -14,14 +14,14 @@ const staffData = [
   {
     id: 1,
     name: 'Mariam',
-    specialties: `${SERVICES.WAXING}, ${SERVICES.PIERCING}`,
+    specialties: 'Waxing, Piercing',
     rating: 5.0,
     avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
   },
   {
     id: 2,
     name: 'Jackson',
-    specialties: `${SERVICES.BARBER}, ${SERVICES.TATTOO}`,
+    specialties: 'Barber, Tattoo',
     rating: 5.0,
     avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
   },
@@ -56,7 +56,7 @@ const staffData = [
   {
     id: 7,
     name: 'Aura',
-    specialties: 'Spa, Makeup',
+    specialties: 'Spa, MakeUp',
     rating: 4.8,
     avatar: 'https://randomuser.me/api/portraits/women/4.jpg',
   },
@@ -70,7 +70,7 @@ const staffData = [
   {
     id: 9,
     name: 'Jenelle',
-    specialties: 'Barber, Waxing',
+    specialties: 'Barber, waxing',
     rating: 5.0,
     avatar: 'https://randomuser.me/api/portraits/women/5.jpg',
   },
@@ -84,7 +84,7 @@ const staffData = [
   {
     id: 11,
     name: 'Ashley',
-    specialties: 'Makeup, Hair',
+    specialties: 'MakeUp, Hair',
     rating: 4.9,
     avatar: 'https://randomuser.me/api/portraits/women/6.jpg',
   },
@@ -132,4 +132,4 @@ const staffData = [
   },
 ];
 
-module.exports = staffData;
+module.exports = { staffData };
