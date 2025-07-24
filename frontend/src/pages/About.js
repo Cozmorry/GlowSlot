@@ -117,7 +117,7 @@ export default function About() {
             <div style={{
               fontSize: isDesktop ? '1.8rem' : '1.3rem',
               fontWeight: '700',
-              color: theme.text,
+        color: theme.text,
               marginBottom: '0.3rem'
             }}>
               {stat.number}
@@ -138,7 +138,7 @@ export default function About() {
         width: '100%'
       }}>
         {/* Welcome Section */}
-        <div style={{ 
+        <div style={{
           marginBottom: '2rem',
           background: mode === 'dark' 
             ? 'rgba(30, 41, 59, 0.8)' 
@@ -153,7 +153,7 @@ export default function About() {
           <h2 style={{
             fontSize: isDesktop ? '1.8rem' : '1.5rem',
             fontWeight: '700',
-            color: theme.accent,
+          color: theme.accent,
             marginBottom: '1rem',
             display: 'flex',
             alignItems: 'center',
@@ -422,10 +422,10 @@ export default function About() {
                 }}>
                   glowslot@info.co.ke
                 </div>
-              </div>
-            </div>
           </div>
-        </div>
+          </div>
+          </div>
+          </div>
 
         {/* Social Media */}
         <div style={{ 
@@ -489,7 +489,7 @@ export default function About() {
               >
                 <div style={{ color: social.color }}>
                   {social.icon}
-                </div>
+          </div>
                 <span style={{
                   fontSize: '0.9rem',
                   fontWeight: '500',
@@ -497,7 +497,7 @@ export default function About() {
                 }}>
                   {social.name}
                 </span>
-              </div>
+          </div>
             ))}
           </div>
         </div>

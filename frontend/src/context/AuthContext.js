@@ -55,22 +55,37 @@ export const AuthProvider = ({ children }) => {
           console.log('Parsed user data:', parsedUser);
           console.log('User role from validation:', validation.user?.role);
           console.log('User role from localStorage:', parsedUser?.role);
+          console.log('User ID from validation:', validation.user?.id);
+          console.log('User ID from localStorage:', parsedUser?.id);
           
           // Use the user data from validation (backend) instead of localStorage
           console.log('Setting user from validation:', validation.user);
           
           // Check if there's a role mismatch between stored and validated user
           if (parsedUser && parsedUser.role !== validation.user.role) {
-            console.log('Role mismatch detected! Clearing all auth data');
+            console.log('Role mismatch detected!');
             console.log('Stored role:', parsedUser.role, 'Validated role:', validation.user.role);
+            console.log('Stored user ID:', parsedUser.id, 'Validated user ID:', validation.user.id);
             
-            // Clear all auth-related localStorage data
-            localStorage.removeItem('user');
-            localStorage.removeItem('token');
-            localStorage.removeItem('userId');
+            // Only clear if the user IDs are different (different users)
+            if (parsedUser.id !== validation.user.id) {
+              console.log('Different user IDs detected! Clearing auth data');
+              localStorage.removeItem('user');
+              localStorage.removeItem('token');
+              localStorage.removeItem('userId');
+            } else {
+              console.log('Same user, just role change. Using validated user data.');
+            }
           }
           
-          setUser(validation.user);
+          // Ensure we're setting the correct user data
+          if (validation.user && validation.user.id) {
+            console.log('Setting user with ID:', validation.user.id);
+            setUser(validation.user);
+          } else {
+            console.log('Invalid user data from validation, using stored user');
+            setUser(parsedUser);
+          }
         } else {
           console.log('Token is invalid, clearing auth data');
           // Clear invalid auth data

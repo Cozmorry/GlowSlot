@@ -255,8 +255,8 @@ const Signup = () => {
                   onBlur={(e) => {
                     e.target.style.borderColor = '#e2e8f0';
                     e.target.style.boxShadow = 'none';
-                  }}
-                />
+                }}
+              />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -272,7 +272,7 @@ const Signup = () => {
                     fontSize: '18px',
                     padding: '0',
                     transition: 'color 0.2s ease',
-                  }}
+                }}
                   onMouseEnter={(e) => e.target.style.color = '#e91e63'}
                   onMouseLeave={(e) => e.target.style.color = '#a0aec0'}
               >
@@ -320,8 +320,8 @@ const Signup = () => {
                   onBlur={(e) => {
                     e.target.style.borderColor = '#e2e8f0';
                     e.target.style.boxShadow = 'none';
-                  }}
-                />
+                }}
+              />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
@@ -337,10 +337,10 @@ const Signup = () => {
                     fontSize: '18px',
                     padding: '0',
                     transition: 'color 0.2s ease',
-                  }}
+                }}
                   onMouseEnter={(e) => e.target.style.color = '#e91e63'}
                   onMouseLeave={(e) => e.target.style.color = '#a0aec0'}
-                >
+              >
                   {showConfirm ? '🙈' : '👁️'}
                 </button>
               </div>

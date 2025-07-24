@@ -56,9 +56,9 @@ const signup = async (req, res) => {
     // Send verification email
     const verifyUrl = `${APP_BASE_URL}/verify-email?token=${emailVerificationToken}`;
     try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
         subject: 'Verify your email - GlowSlot',
         html: `
         <!DOCTYPE html>

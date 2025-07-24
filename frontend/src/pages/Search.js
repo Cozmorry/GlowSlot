@@ -61,10 +61,10 @@ export default function Search() {
       setIsSearching(true);
       
       setTimeout(() => {
-        const lower = query.toLowerCase();
-        const filteredCategories = categories.filter(c => c.name.toLowerCase().includes(lower));
-        const filteredServices = allServices.filter(s => s.name.toLowerCase().includes(lower) || (s.category && s.category.toLowerCase().includes(lower)));
-        const filteredStaff = allStaff.filter(s => s.name.toLowerCase().includes(lower) || (s.specialties && s.specialties.toLowerCase().includes(lower)));
+      const lower = query.toLowerCase();
+      const filteredCategories = categories.filter(c => c.name.toLowerCase().includes(lower));
+      const filteredServices = allServices.filter(s => s.name.toLowerCase().includes(lower) || (s.category && s.category.toLowerCase().includes(lower)));
+      const filteredStaff = allStaff.filter(s => s.name.toLowerCase().includes(lower) || (s.specialties && s.specialties.toLowerCase().includes(lower)));
         
         // Apply active filter
         let finalResults = { categories: [], services: [], staff: [] };
@@ -192,13 +192,13 @@ export default function Search() {
               transition: 'color 0.2s ease'
             }}
           />
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search services, staff, or categories..."
-            style={{
-              width: '100%',
+        <input
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search services, staff, or categories..."
+          style={{
+            width: '100%',
               padding: isDesktop ? '1.2rem 1.5rem 1.2rem 3rem' : '0.9rem 1rem 0.9rem 2.5rem',
               borderRadius: '20px',
               border: 'none',
@@ -206,11 +206,11 @@ export default function Search() {
               background: mode === 'dark' 
                 ? 'rgba(255, 255, 255, 0.1)' 
                 : 'rgba(255, 255, 255, 0.9)',
-              color: theme.text,
+            color: theme.text,
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-              outline: 'none',
+            outline: 'none',
               transition: 'all 0.3s ease',
-              boxSizing: 'border-box',
+            boxSizing: 'border-box',
               backdropFilter: 'blur(10px)',
               border: query ? `2px solid ${theme.accent}` : '2px solid transparent',
               WebkitAppearance: 'none', // Removes default iOS styling
@@ -383,7 +383,7 @@ export default function Search() {
                     Categories ({results.categories.length})
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {results.categories.map(c => (
+                  {results.categories.map(c => (
                                              <div 
                          key={c.name} 
                          style={{ 
@@ -420,8 +420,8 @@ export default function Search() {
                         <span style={{ fontSize: '1.5rem' }}>{c.icon}</span>
                         <span style={{ fontWeight: '600', fontSize: isDesktop ? '1rem' : '0.95rem' }}>{c.name}</span>
                         <span style={{ marginLeft: 'auto', color: theme.accent, fontSize: '0.9rem' }}>→</span>
-                      </div>
-                    ))}
+                    </div>
+                  ))}
                   </div>
                 </div>
               )}
@@ -441,7 +441,7 @@ export default function Search() {
                     Services ({results.services.length})
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {results.services.map((s, i) => (
+                  {results.services.map((s, i) => (
                                              <div 
                          key={s.name + i} 
                          style={{ 
@@ -511,8 +511,8 @@ export default function Search() {
                         }}>
                           {s.price}
                         </div>
-                      </div>
-                    ))}
+                    </div>
+                  ))}
                   </div>
                 </div>
               )}
@@ -532,7 +532,7 @@ export default function Search() {
                     Staff ({results.staff.length})
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {results.staff.map(s => (
+                  {results.staff.map(s => (
                                              <div 
                          key={s.id} 
                          style={{ 
@@ -600,8 +600,8 @@ export default function Search() {
                           <FaStar size={14} />
                           {s.rating}
                         </div>
-                      </div>
-                    ))}
+                    </div>
+                  ))}
                   </div>
                 </div>
               )}

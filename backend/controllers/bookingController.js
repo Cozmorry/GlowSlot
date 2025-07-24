@@ -1,7 +1,7 @@
 const BookingModel = require('../models/Booking');
 const { getServicePrice } = require('../data/servicePrices');
 const User = require('../models/User');
-const staffData = require('../data/staffData');
+const { staffData } = require('../data/staffData');
 
 exports.addToCart = async (req, res) => {
   try {

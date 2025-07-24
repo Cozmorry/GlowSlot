@@ -949,13 +949,13 @@ function AppointmentsTab({ isMobile, showError }) {
                     }}>
                       {/* Show Confirm button for pending appointments */}
                       {appointment.status === 'pending' && (
-                        <button
-                          onClick={() => updateAppointmentStatus(appointment._id, 'confirmed')}
-                          style={{
+                  <button
+                    onClick={() => updateAppointmentStatus(appointment._id, 'confirmed')}
+                    style={{
                             padding: '8px 16px',
                             background: '#4caf50',
-                            color: 'white',
-                            border: 'none',
+                      color: 'white',
+                      border: 'none',
                             borderRadius: '6px',
                             cursor: 'pointer',
                             fontSize: '12px',
@@ -964,18 +964,18 @@ function AppointmentsTab({ isMobile, showError }) {
                           }}
                         >
                           Confirm Appointment
-                        </button>
+                  </button>
                       )}
-                      
+                  
                       {/* Show Complete button for pending appointments (for testing) */}
                       {appointment.status === 'pending' && (
-                        <button
-                          onClick={() => updateAppointmentStatus(appointment._id, 'completed')}
-                          style={{
+                  <button
+                    onClick={() => updateAppointmentStatus(appointment._id, 'completed')}
+                    style={{
                             padding: '8px 16px',
                             background: '#2196f3',
-                            color: 'white',
-                            border: 'none',
+                      color: 'white',
+                      border: 'none',
                             borderRadius: '6px',
                             cursor: 'pointer',
                             fontSize: '12px',
@@ -984,7 +984,7 @@ function AppointmentsTab({ isMobile, showError }) {
                           }}
                         >
                           Mark Complete
-                        </button>
+                  </button>
                       )}
                       
                       {/* Show Confirm button for paid appointments */}

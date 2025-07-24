@@ -42,20 +42,20 @@ const Login = () => {
         
         // Add a small delay to ensure state is updated
         setTimeout(() => {
-          // Redirect based on role
+        // Redirect based on role
           console.log('User role:', data.user.role);
           console.log('About to navigate - role check:', data.user.role === 'admin' ? 'ADMIN' : 'USER');
-          if (data.user.role === 'admin') {
+        if (data.user.role === 'admin') {
             console.log('Redirecting to admin dashboard');
             console.log('Current URL before redirect:', window.location.href);
-            navigate('/admin');
+          navigate('/admin');
             console.log('Navigate called for /admin');
             console.log('Navigation should have happened to /admin');
-          } else {
+        } else {
             console.log('Redirecting to home');
-            navigate('/home');
+          navigate('/home');
             console.log('Navigation should have happened to /home');
-          }
+        }
         }, 100);
       } else {
         setError(data.message || 'Login failed');
@@ -81,7 +81,7 @@ const Login = () => {
         if (data.user.role === 'admin') {
           navigate('/admin');
         } else {
-          navigate('/home');
+    navigate('/home');
         }
       } else {
         setError('Google sign-in failed');
@@ -114,9 +114,9 @@ const Login = () => {
         borderRadius: '20px',
         padding: '40px',
         boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-        minWidth: 320,
-        maxWidth: 400,
-        width: '100%',
+          minWidth: 320,
+          maxWidth: 400,
+          width: '100%',
         border: '1px solid rgba(255, 255, 255, 0.2)',
       }}>
         {/* Header */}
@@ -152,15 +152,15 @@ const Login = () => {
             }}>
               Email Address
             </label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
+          <input
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            required
               placeholder="Enter your email"
-              style={{
-                width: '100%',
+            style={{
+              width: '100%',
                 padding: '16px',
                 border: '2px solid #e2e8f0',
                 borderRadius: '12px',
@@ -177,9 +177,9 @@ const Login = () => {
               onBlur={(e) => {
                 e.target.style.borderColor = '#e2e8f0';
                 e.target.style.boxShadow = 'none';
-              }}
-            />
-          </div>
+            }}
+          />
+        </div>
 
           {/* Password Field */}
           <div style={{ marginBottom: '32px' }}>
@@ -206,19 +206,19 @@ const Login = () => {
               onMouseEnter={(e) => e.target.style.color = '#c2185b'}
               onMouseLeave={(e) => e.target.style.color = '#e91e63'}
               >
-                Forgot password?
-              </Link>
-            </div>
+            Forgot password?
+          </Link>
+        </div>
             <div style={{ position: 'relative' }}>
-              <input
+          <input
                 type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                required
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            required
                 placeholder="Enter your password"
-                style={{
-                  width: '100%',
+            style={{
+              width: '100%',
                   padding: '16px',
                   paddingRight: '50px',
                   border: '2px solid #e2e8f0',
@@ -274,23 +274,23 @@ const Login = () => {
               border: '1px solid #feb2b2',
             }}>
               {error}
-            </div>
+        </div>
           )}
 
           {/* Login Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            width: '100%',
               padding: '16px',
               background: loading ? '#a0aec0' : 'linear-gradient(135deg, #e91e63 0%, #c2185b 100%)',
-              color: '#fff',
-              border: 'none',
+            color: '#fff',
+            border: 'none',
               borderRadius: '12px',
               fontWeight: '600',
               fontSize: '16px',
-              cursor: loading ? 'not-allowed' : 'pointer',
+            cursor: loading ? 'not-allowed' : 'pointer',
               marginBottom: '24px',
               transition: 'all 0.2s ease',
               boxShadow: loading ? 'none' : '0 4px 12px rgba(233, 30, 99, 0.3)',
@@ -309,7 +309,7 @@ const Login = () => {
             }}
           >
             {loading ? 'Signing in...' : 'Sign In'}
-          </button>
+        </button>
 
           {/* Sign Up Link */}
           <div style={{
@@ -328,9 +328,9 @@ const Login = () => {
             onMouseEnter={(e) => e.target.style.color = '#c2185b'}
             onMouseLeave={(e) => e.target.style.color = '#e91e63'}
             >
-              Sign up
-            </Link>
-          </div>
+            Sign up
+          </Link>
+        </div>
 
           {/* Divider */}
           <div style={{
@@ -348,22 +348,22 @@ const Login = () => {
               or continue with
             </span>
             <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
-          </div>
+        </div>
 
           {/* Google Sign In Button */}
           <div style={{ marginBottom: '32px' }}>
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
               disabled={loading}
-              style={{
+            style={{
                 width: '100%',
-                background: '#fff',
+              background: '#fff',
                 border: '2px solid #e2e8f0',
                 borderRadius: '12px',
                 padding: '16px',
-                display: 'flex',
-                alignItems: 'center',
+              display: 'flex',
+              alignItems: 'center',
                 justifyContent: 'center',
                 gap: '12px',
                 cursor: loading ? 'not-allowed' : 'pointer',
@@ -394,15 +394,15 @@ const Login = () => {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              Sign in with Google
-            </button>
-          </div>
+            Sign in with Google
+          </button>
+        </div>
 
           {/* Skip Option */}
           <div style={{ textAlign: 'center' }}>
-            <button
-              type="button"
-              onClick={handleSkip}
+          <button
+            type="button"
+            onClick={handleSkip}
               style={{
                 background: 'none',
                 border: 'none',
@@ -417,9 +417,9 @@ const Login = () => {
               onMouseLeave={(e) => e.target.style.color = '#a0aec0'}
             >
               Continue as guest
-            </button>
-          </div>
-        </form>
+          </button>
+        </div>
+      </form>
       </div>
     </div>
   );
