@@ -198,8 +198,28 @@ const Home = forwardRef((props, ref) => {
                 <div style={{ marginBottom: '1rem' }}>
                   <h3 style={{ fontSize: 16, color: theme.accent, margin: '0 0 0.5rem 0.5rem', fontWeight: 700, letterSpacing: 1 }}>Categories</h3>
                   {categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).map(c => (
-                    <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.7rem 0.5rem', borderRadius: 8, cursor: 'pointer', transition: 'background 0.2s', color: theme.text }}
-                      onClick={() => navigate(c.route)}>
+                    <div key={c.name} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 12, 
+                      padding: '0.7rem 0.5rem', 
+                      borderRadius: 8, 
+                      cursor: 'pointer', 
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', 
+                      color: theme.text,
+                      transform: 'translateX(0)',
+                    }}
+                      onClick={() => navigate(c.route)}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = theme.accent + '15';
+                        e.target.style.transform = 'translateX(4px)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'transparent';
+                        e.target.style.transform = 'translateX(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}>
                       <FaLayerGroup color={theme.accent} size={16} />
                       <span style={{ fontWeight: 500, fontSize: 16 }}>{c.name}</span>
                     </div>
@@ -211,8 +231,28 @@ const Home = forwardRef((props, ref) => {
                 <div style={{ marginBottom: '1rem' }}>
                   <h3 style={{ fontSize: 16, color: theme.accent, margin: '0 0 0.5rem 0.5rem', fontWeight: 700, letterSpacing: 1 }}>Services</h3>
                   {suggestions.services.map((s, i) => (
-                    <div key={s.name + i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.7rem 0.5rem', borderRadius: 8, cursor: 'pointer', transition: 'background 0.2s', color: theme.text }}
-                      onClick={() => navigate(`/${s.category.toLowerCase().replace(/ /g, '-')}`)}>
+                    <div key={s.name + i} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 12, 
+                      padding: '0.7rem 0.5rem', 
+                      borderRadius: 8, 
+                      cursor: 'pointer', 
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', 
+                      color: theme.text,
+                      transform: 'translateX(0)',
+                    }}
+                      onClick={() => navigate(`/${s.category.toLowerCase().replace(/ /g, '-')}`)}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = theme.accent + '15';
+                        e.target.style.transform = 'translateX(4px)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'transparent';
+                        e.target.style.transform = 'translateX(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}>
                       <img src={s.img} alt={s.name} style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover' }} />
                       <span style={{ fontWeight: 500, fontSize: 16 }}>{s.name}</span>
                       <span style={{ color: theme.accent, fontWeight: 600, marginLeft: 8 }}>{s.category}</span>
@@ -226,8 +266,28 @@ const Home = forwardRef((props, ref) => {
                 <div>
                   <h3 style={{ fontSize: 16, color: theme.accent, margin: '0 0 0.5rem 0.5rem', fontWeight: 700, letterSpacing: 1 }}>Staff</h3>
                   {suggestions.staff.map(s => (
-                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.7rem 0.5rem', borderRadius: 8, cursor: 'pointer', transition: 'background 0.2s', color: theme.text }}
-                      onClick={() => navigate('/staff')}>
+                    <div key={s.id} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 12, 
+                      padding: '0.7rem 0.5rem', 
+                      borderRadius: 8, 
+                      cursor: 'pointer', 
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', 
+                      color: theme.text,
+                      transform: 'translateX(0)',
+                    }}
+                      onClick={() => navigate('/staff')}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = theme.accent + '15';
+                        e.target.style.transform = 'translateX(4px)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'transparent';
+                        e.target.style.transform = 'translateX(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}>
                       <img src={s.avatar} alt={s.name} style={{ width: 28, height: 28, borderRadius: 14, objectFit: 'cover' }} />
                       <span style={{ fontWeight: 500, fontSize: 16 }}>{s.name}</span>
                       <span style={{ color: theme.accent, fontWeight: 600, marginLeft: 8 }}>{s.specialties}</span>
@@ -266,8 +326,18 @@ const Home = forwardRef((props, ref) => {
                 cursor: 'pointer',
                 margin: 0,
                 boxSizing: 'border-box',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: 'translateY(0) scale(1)',
               }}
               onClick={() => navigate(cat.route)}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-8px) scale(1.05)';
+                e.target.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0) scale(1)';
+                e.target.style.boxShadow = '0 2px 8px 0 #eee';
+              }}
             >
               <div style={{ paddingTop: '100%', position: 'relative' }}>
                 <img
@@ -282,6 +352,14 @@ const Home = forwardRef((props, ref) => {
                     height: '100%',
                     objectFit: 'cover',
                     borderRadius: 18,
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: 'scale(1)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)';
                   }}
                 />
                 <span
@@ -295,13 +373,26 @@ const Home = forwardRef((props, ref) => {
                     fontWeight: 700,
                     fontSize: 18,
                     textShadow: '2px 2px 8px #000',
-                    padding: '0 8px',
-                    borderRadius: 8,
-                    background: 'rgba(0,0,0,0.25)',
+                    padding: '8px 16px',
+                    borderRadius: 12,
+                    background: 'linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 100%)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     maxWidth: '90%',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%)';
+                    e.target.style.transform = 'translateX(-50%) scale(1.05)';
+                    e.target.style.padding = '10px 18px';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 100%)';
+                    e.target.style.transform = 'translateX(-50%) scale(1)';
+                    e.target.style.padding = '8px 16px';
                   }}
                 >
                   {cat.name}

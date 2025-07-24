@@ -46,8 +46,37 @@ export default function Spa() {
         padding: '0.5rem 1rem',
         boxShadow: '0 2px 8px 0 #eee',
         position: 'relative',
-      }}>
-        <img src="https://i.pinimg.com/736x/59/b3/c0/59b3c0e608bfd23632d9991c4050edc5.jpg" alt="Wash and Blowdry" style={{ width: '100%', borderRadius: 12, marginBottom: 8, objectFit: 'cover', maxHeight: 120 }} />
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        overflow: 'hidden',
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)';
+        e.target.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.boxShadow = '0 2px 8px 0 #eee';
+        e.target.style.transform = 'translateY(0)';
+      }}
+      >
+        <img 
+          src="https://i.pinimg.com/736x/59/b3/c0/59b3c0e608bfd23632d9991c4050edc5.jpg" 
+          alt="Wash and Blowdry" 
+          style={{ 
+            width: '100%', 
+            borderRadius: 12, 
+            marginBottom: 8, 
+            objectFit: 'cover', 
+            maxHeight: 120,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: 'scale(1)',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'scale(1)';
+          }}
+        />
         <div style={{
           position: 'absolute',
           left: '50%',
@@ -60,7 +89,19 @@ export default function Spa() {
           padding: '0.3rem 1.2rem',
           borderRadius: 10,
           boxShadow: '0 1px 4px 0 #eee',
-        }}>
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'translate(-50%, -50%) scale(1.05)';
+          e.target.style.background = 'rgba(255,255,255,0.95)';
+          e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'translate(-50%, -50%) scale(1)';
+          e.target.style.background = 'rgba(255,255,255,0.85)';
+          e.target.style.boxShadow = '0 1px 4px 0 #eee';
+        }}
+        >
           WASH AND BLOWDRY INCLUSIVE
         </div>
       </div>
@@ -73,8 +114,42 @@ export default function Spa() {
           boxShadow: '0 2px 12px 0 #eee',
           display: 'flex',
           alignItems: 'center',
-        }}>
-          <img src={service.name === 'Facial' ? 'https://i.pinimg.com/736x/59/b3/c0/59b3c0e608bfd23632d9991c4050edc5.jpg' : service.img} alt={service.name} style={{ width: 90, height: 90, borderRadius: 16, objectFit: 'cover', marginRight: 18 }} />
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          transform: 'translateY(0) scale(1)',
+          cursor: 'pointer',
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'translateY(-6px) scale(1.02)';
+          e.target.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.15)';
+          e.target.style.background = theme.accent + '30';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'translateY(0) scale(1)';
+          e.target.style.boxShadow = '0 2px 12px 0 #eee';
+          e.target.style.background = theme.accent + '22';
+        }}
+        >
+          <img 
+            src={service.name === 'Facial' ? 'https://i.pinimg.com/736x/59/b3/c0/59b3c0e608bfd23632d9991c4050edc5.jpg' : service.img} 
+            alt={service.name} 
+            style={{ 
+              width: 90, 
+              height: 90, 
+              borderRadius: 16, 
+              objectFit: 'cover', 
+              marginRight: 18,
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: 'scale(1)',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'scale(1.1)';
+              e.target.style.borderRadius = '20px';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'scale(1)';
+              e.target.style.borderRadius = '16px';
+            }}
+          />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 20 }}>{service.name}</div>
             <div style={{ fontSize: 17, color: theme.text, opacity: 0.9 }}>{service.price}</div>
@@ -94,7 +169,21 @@ export default function Spa() {
               fontWeight: 700,
               cursor: 'pointer',
               boxShadow: '0 1px 6px 0 #eee',
-            }} onClick={() => { setSelectedService(service.name); setBookingOpen(true); }}>Book Now</button>
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: 'translateY(0) scale(1)',
+            }} 
+            onClick={() => { setSelectedService(service.name); setBookingOpen(true); }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px) scale(1.05)';
+              e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)';
+              e.target.style.background = theme.accent + 'dd';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0) scale(1)';
+              e.target.style.boxShadow = '0 1px 6px 0 #eee';
+              e.target.style.background = theme.accent;
+            }}
+            >Book Now</button>
           </div>
         </div>
       ))}
