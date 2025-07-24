@@ -5,11 +5,24 @@ import { useNavigate } from 'react-router-dom';
 import CartItem from '../components/CartItem';
 import { FaHistory, FaShoppingCart, FaCheckCircle, FaTimesCircle, FaClock, FaSpinner } from 'react-icons/fa';
 
+// Simple spinner component
+const Spinner = () => (
+  <div style={{
+    display: 'inline-block',
+    width: '24px',
+    height: '24px',
+    border: '2px solid #f3f3f3',
+    borderTop: '2px solid #e91e63',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite'
+  }} />
+);
+
 const isDesktopWidth = () => window.innerWidth >= 900;
 
 export default function Cart() {
   const { theme } = useTheme();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [isDesktop, setIsDesktop] = React.useState(isDesktopWidth());
   const [bookings, setBookings] = useState([]);
@@ -29,9 +42,12 @@ export default function Cart() {
   }, []);
 
   useEffect(() => {
-    fetchBookings();
-    fetchOrderHistory();
-  }, []);  const fetchBookings = async () => {
+    // Wait for auth to finish loading before fetching data
+    if (!authLoading) {
+      fetchBookings();
+      fetchOrderHistory();
+    }
+  }, [authLoading]);  const fetchBookings = async () => {
     try {
       setLoading(true);
       
@@ -136,6 +152,24 @@ export default function Cart() {
         return 'Unknown';
     }
   };
+
+  // Show loading while auth is still loading
+  if (authLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '70vh',
+        color: theme.text
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <Spinner />
+          <div style={{ marginTop: '12px' }}>Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div>Loading...</div>;

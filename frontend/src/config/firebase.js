@@ -26,11 +26,14 @@ const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async () => {
   try {
+    console.log('Starting Google sign-in...');
     const result = await signInWithPopup(auth, googleProvider);
     const idToken = await result.user.getIdToken();
+    console.log('Got ID token from Google');
 
     // Send the token to your backend
-    const response = await fetch('http://localhost:5000/api/auth/google', {
+    console.log('Sending token to backend...');
+    const response = await fetch('http://localhost:5000/auth/google', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -38,13 +41,15 @@ export const signInWithGoogle = async () => {
       body: JSON.stringify({ idToken }),
     });
 
+    console.log('Backend response status:', response.status);
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Backend response:', errorText);
+      console.error('Backend response error:', errorText);
       throw new Error('Failed to authenticate with backend');
     }
 
     const data = await response.json();
+    console.log('Backend response data:', data);
     return data;
   } catch (error) {
     console.error("Error signing in with Google:", error);

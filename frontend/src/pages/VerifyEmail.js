@@ -16,18 +16,36 @@ const VerifyEmail = () => {
       return;
     }
 
-    fetch(`${process.env.REACT_APP_API_URL}/auth/verify-email?token=${token}`)
-      .then(res => res.json())
+    console.log('Verifying email with token:', token);
+    fetch(`http://localhost:5000/auth/verify-email?token=${token}`)
+      .then(res => {
+        console.log('Verification response status:', res.status);
+        return res.json();
+      })
       .then(data => {
+        console.log('Verification response data:', data);
         if (data.token) {
-          login(data.user);
+          // Include token in user data
+          const userWithToken = { ...data.user, token: data.token };
+          console.log('Logging in with user data:', userWithToken);
+          login(userWithToken);
           setStatus('success');
-          setTimeout(() => navigate('/dashboard'), 2000);
+          
+          // Redirect based on role
+          if (data.user.role === 'admin') {
+            setTimeout(() => navigate('/admin'), 2000);
+          } else {
+            setTimeout(() => navigate('/home'), 2000);
+          }
         } else {
+          console.log('No token in response');
           setStatus('error');
         }
       })
-      .catch(() => setStatus('error'));
+      .catch((error) => {
+        console.error('Verification error:', error);
+        setStatus('error');
+      });
   }, [location, navigate]);
 
   return (

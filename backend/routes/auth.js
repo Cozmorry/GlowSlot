@@ -2,6 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const auth = require('../middleware/auth');
 
 // Traditional signup
 router.post(
@@ -27,5 +28,6 @@ router.post('/google', authController.googleAuth);
 router.get('/verify-email', authController.verifyEmail);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
+router.put('/profile/:userId', auth, authController.updateProfile);
 
 module.exports = router; 

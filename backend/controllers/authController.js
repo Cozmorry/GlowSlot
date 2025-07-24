@@ -11,19 +11,35 @@ const signup = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
-  }try {
+  }
+  try {
     const { name, email, password, role } = req.body;
+    
+    // Check if required environment variables are set
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET environment variable is not set');
+      return res.status(500).json({ message: 'Server configuration error' });
+    }
+    
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('Email environment variables are not set');
+      return res.status(500).json({ message: 'Email service not configured' });
+    }
+    
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: 'User already exists.' });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
+    
     // Generate a JWT verification token with 10 min expiry
     const emailVerificationToken = jwt.sign(
       { email },
       process.env.JWT_SECRET,
       { expiresIn: '10m' }
-    );// Only allow 'customer' or 'admin' roles from the client side
+    );
+    
+    // Only allow 'customer' or 'admin' roles from the client side
     const validRole = role === 'admin' ? 'admin' : 'customer';
     
     const user = new User({
@@ -31,42 +47,143 @@ const signup = async (req, res) => {
       email,
       password: hashedPassword,
       authProvider: 'local',
-      verified: false,
+      verified: false, // Not verified until email is clicked
       emailVerificationToken,
       role: validRole,
     });
     await user.save();
-    // Create user in Firebase Auth
-    try {
-      const fbUser = await admin.auth().createUser({
-        email,
-        password,
-        displayName: name,
-      });
-      user.firebaseUid = fbUser.uid;
-      await user.save();
-    } catch (fbErr) {
-      // If Firebase user already exists, fetch UID and save it
-      if (fbErr.code === 'auth/email-already-exists') {
-        const fbUser = await admin.auth().getUserByEmail(email);
-        user.firebaseUid = fbUser.uid;
-        await user.save();
-      } else {
-        // Optionally: rollback Mongo user if Firebase fails
-        await User.deleteOne({ _id: user._id });
-        return res.status(500).json({ message: 'Error creating user in Firebase', error: fbErr.message });
-      }
-    }
+    
     // Send verification email
-    const verifyUrl = `${APP_BASE_URL}/auth/verify-email?token=${emailVerificationToken}`;
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Verify your email',
-      html: `<p>Hello ${name},</p><p>Please verify your email by clicking the link below. This link will expire in 10 minutes:</p><a href="${verifyUrl}">${verifyUrl}</a>`
-    });
+    const verifyUrl = `${APP_BASE_URL}/verify-email?token=${emailVerificationToken}`;
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Verify your email - GlowSlot',
+        html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Verify Your Email</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #f8f9fa;
+            }
+            .container {
+              background-color: #ffffff;
+              border-radius: 12px;
+              padding: 40px;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              text-align: center;
+            }
+            .logo {
+              font-size: 28px;
+              font-weight: bold;
+              color: #e91e63;
+              margin-bottom: 20px;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: 600;
+              color: #2d3748;
+              margin-bottom: 16px;
+            }
+            .message {
+              font-size: 16px;
+              color: #4a5568;
+              margin-bottom: 32px;
+              line-height: 1.6;
+            }
+            .button {
+              display: inline-block;
+              background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+              color: #ffffff;
+              padding: 16px 32px;
+              text-decoration: none;
+              border-radius: 8px;
+              font-weight: 600;
+              font-size: 16px;
+              margin: 20px 0;
+              box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3);
+              transition: all 0.2s ease;
+            }
+            .button:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 16px rgba(233, 30, 99, 0.4);
+            }
+            .warning {
+              background-color: #fff3cd;
+              border: 1px solid #ffeaa7;
+              color: #856404;
+              padding: 16px;
+              border-radius: 8px;
+              margin: 24px 0;
+              font-size: 14px;
+            }
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #e2e8f0;
+              font-size: 14px;
+              color: #718096;
+            }
+            .link {
+              color: #e91e63;
+              text-decoration: none;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="logo">✨ GlowSlot</div>
+            <h1 class="title">Verify Your Email Address</h1>
+            <p class="message">
+              Hello ${name},<br><br>
+              Welcome to GlowSlot! Please verify your email address to complete your account setup and start booking your beauty services.
+            </p>
+            
+            <a href="${verifyUrl}" class="button">
+              Verify Email Address
+            </a>
+            
+            <div class="warning">
+              ⏰ <strong>Important:</strong> This verification link will expire in 10 minutes for security reasons.
+            </div>
+            
+            <p class="message">
+              If the button doesn't work, you can copy and paste this link into your browser:<br>
+              <a href="${verifyUrl}" class="link">${verifyUrl}</a>
+            </p>
+            
+            <div class="footer">
+              <p>If you didn't create an account with GlowSlot, you can safely ignore this email.</p>
+              <p>© 2024 GlowSlot. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+      });
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+      // Still create the user but inform about email issue
+      return res.status(201).json({ 
+        message: 'Account created successfully, but verification email could not be sent. Please contact support.',
+        warning: 'Email service temporarily unavailable'
+      });
+    }
+    
     res.status(201).json({ message: 'Signup successful. Please check your email to verify your account.' });
   } catch (err) {
+    console.error('Signup error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
@@ -74,27 +191,54 @@ const signup = async (req, res) => {
 const verifyEmail = async (req, res) => {
   try {
     const { token } = req.query;
+    console.log('Email verification request with token:', token);
+    
     if (!token) {
+      console.log('No token provided');
       return res.status(400).json({ message: 'Verification token is required.' });
     }
+    
     // Verify the JWT token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Token decoded successfully:', decoded);
     } catch (err) {
+      console.log('Token verification failed:', err.message);
       return res.status(400).json({ message: 'Invalid or expired verification token.' });
     }
+    
     const user = await User.findOne({ email: decoded.email, emailVerificationToken: token });
+    console.log('User found:', user ? 'Yes' : 'No');
+    
     if (!user) {
+      console.log('No user found with this token');
       return res.status(400).json({ message: 'Invalid or expired verification token.' });
     }
+    
     user.verified = true;
     user.emailVerificationToken = undefined;
     await user.save();
+    console.log('User verified and saved');
+    
     // Auto-login: return a JWT
     const loginToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ message: 'Email verified successfully. You are now logged in.', token: loginToken, user: { id: user._id, name: user.name, email: user.email } });
+    console.log('Login token generated');
+    
+    res.json({ 
+      message: 'Email verified successfully. You are now logged in.', 
+      token: loginToken, 
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email, 
+        phone: user.phone, 
+        avatar: user.avatar,
+        role: user.role
+      } 
+    });
   } catch (err) {
+    console.error('Email verification error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
@@ -116,8 +260,9 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials.' });
-    }const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    }
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, phone: user.phone, avatar: user.avatar, role: user.role } });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -141,12 +286,12 @@ const googleAuth = async (req, res) => {
         name: name || 'Google User',
         email,
         authProvider: 'google',
-        verified: true,
+        verified: true, // Google users are auto-verified
       });
       await user.save();
     }
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, phone: user.phone, avatar: user.avatar, role: user.role } });
   } catch (err) {
     res.status(401).json({ message: 'Google authentication failed', error: err.message });
   }
@@ -168,8 +313,118 @@ const forgotPassword = async (req, res) => {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Reset your password',
-      html: `<p>Hello ${user.name},</p><p>Click the link below to reset your password. This link will expire in 10 minutes:</p><a href="${resetUrl}">${resetUrl}</a>`
+      subject: 'Reset your password - GlowSlot',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Reset Your Password</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #f8f9fa;
+            }
+            .container {
+              background-color: #ffffff;
+              border-radius: 12px;
+              padding: 40px;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              text-align: center;
+            }
+            .logo {
+              font-size: 28px;
+              font-weight: bold;
+              color: #e91e63;
+              margin-bottom: 20px;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: 600;
+              color: #2d3748;
+              margin-bottom: 16px;
+            }
+            .message {
+              font-size: 16px;
+              color: #4a5568;
+              margin-bottom: 32px;
+              line-height: 1.6;
+            }
+            .button {
+              display: inline-block;
+              background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+              color: #ffffff;
+              padding: 16px 32px;
+              text-decoration: none;
+              border-radius: 8px;
+              font-weight: 600;
+              font-size: 16px;
+              margin: 20px 0;
+              box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3);
+              transition: all 0.2s ease;
+            }
+            .button:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 16px rgba(233, 30, 99, 0.4);
+            }
+            .warning {
+              background-color: #fff3cd;
+              border: 1px solid #ffeaa7;
+              color: #856404;
+              padding: 16px;
+              border-radius: 8px;
+              margin: 24px 0;
+              font-size: 14px;
+            }
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #e2e8f0;
+              font-size: 14px;
+              color: #718096;
+            }
+            .link {
+              color: #e91e63;
+              text-decoration: none;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="logo">✨ GlowSlot</div>
+            <h1 class="title">Reset Your Password</h1>
+            <p class="message">
+              Hello ${user.name},<br><br>
+              We received a request to reset your password for your GlowSlot account. Click the button below to create a new password.
+            </p>
+            
+            <a href="${resetUrl}" class="button">
+              Reset Password
+            </a>
+            
+            <div class="warning">
+              ⏰ <strong>Important:</strong> This reset link will expire in 10 minutes for security reasons.
+            </div>
+            
+            <p class="message">
+              If the button doesn't work, you can copy and paste this link into your browser:<br>
+              <a href="${resetUrl}" class="link">${resetUrl}</a>
+            </p>
+            
+            <div class="footer">
+              <p>If you didn't request a password reset, you can safely ignore this email.</p>
+              <p>© 2024 GlowSlot. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
     });
     res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
   } catch (err) {
@@ -196,10 +451,47 @@ const resetPassword = async (req, res) => {
     await user.save();
     // Auto-login after reset
     const loginToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ message: 'Password reset successful. You are now logged in.', token: loginToken, user: { id: user._id, name: user.name, email: user.email } });
+    res.json({ message: 'Password reset successful. You are now logged in.', token: loginToken, user: { id: user._id, name: user.name, email: user.email, phone: user.phone, avatar: user.avatar, role: user.role } });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
-module.exports = { signup, login, googleAuth, verifyEmail, forgotPassword, resetPassword }; 
+const updateProfile = async (req, res) => {
+  try {
+    const { name, email, phone, avatar } = req.body;
+    
+    // Use the authenticated user from middleware
+    const user = req.user;
+    
+    // Check if user is trying to update their own profile
+    if (req.params.userId !== user._id.toString()) {
+      return res.status(403).json({ message: 'You can only update your own profile' });
+    }
+
+    // Update user fields
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+    if (avatar) user.avatar = avatar;
+
+    await user.save();
+
+    res.json({ 
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        avatar: user.avatar,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+module.exports = { signup, login, googleAuth, verifyEmail, forgotPassword, resetPassword, updateProfile }; 

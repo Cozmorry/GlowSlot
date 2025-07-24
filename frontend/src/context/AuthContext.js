@@ -5,13 +5,25 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tabId] = useState(() => `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [tabId] = useState(() => {
+    // Try to get existing tabId from localStorage
+    let existingTabId = localStorage.getItem('currentTabId');
+    if (!existingTabId) {
+      // Generate new tabId if none exists
+      existingTabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('currentTabId', existingTabId);
+    }
+    return existingTabId;
+  });
 
   useEffect(() => {
     // Check for user data in localStorage for this specific tab
     const storedUser = localStorage.getItem(`user_${tabId}`);
+    console.log('Loading stored user for tabId:', tabId, 'Stored user:', storedUser);
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      console.log('Parsed user data:', parsedUser);
+      setUser(parsedUser);
     }
     setLoading(false);
 
@@ -47,6 +59,7 @@ export const AuthProvider = ({ children }) => {
   }, [tabId, user?.id]);
 
   const login = (userData) => {
+    console.log('Login called with userData:', userData);
     setUser(userData);
     localStorage.setItem(`user_${tabId}`, JSON.stringify(userData));
     localStorage.setItem(`token_${tabId}`, userData.token || '');
@@ -68,6 +81,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(`user_${tabId}`);
     localStorage.removeItem(`token_${tabId}`);
     localStorage.removeItem(`userId_${tabId}`);
+    localStorage.removeItem('currentTabId');
     // Dispatch custom event for immediate tab synchronization
     window.dispatchEvent(new CustomEvent('authChange', { detail: { user: null, tabId } }));
     // Notify other tabs about the logout
@@ -85,9 +99,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(`user_${tabId}`);
     localStorage.removeItem(`token_${tabId}`);
     localStorage.removeItem(`userId_${tabId}`);
+    localStorage.removeItem('currentTabId');
   };
 
-  const getToken = () => localStorage.getItem(`token_${tabId}`);
+  const getToken = () => {
+    const token = localStorage.getItem(`token_${tabId}`);
+    console.log('Getting token for tabId:', tabId, 'Token:', token ? 'Found' : 'Not found');
+    return token;
+  };
   const getUserId = () => localStorage.getItem(`userId_${tabId}`);
 
   const updateUser = (updatedUserData) => {

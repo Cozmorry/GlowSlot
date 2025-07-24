@@ -19,16 +19,18 @@ const ResetPassword = () => {
     setError('');
     setSuccess(false);
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/auth/reset-password`, {
+      const res = await fetch(`http://localhost:5000/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password }),
       });
       const data = await res.json();
       if (res.ok && data.token) {
-        login(data.user);
+        // Include token in user data
+        const userWithToken = { ...data.user, token: data.token };
+        login(userWithToken);
         setSuccess(true);
-        setTimeout(() => navigate('/dashboard'), 2000);
+        setTimeout(() => navigate('/home'), 2000);
       } else {
         setError(data.message || 'Reset failed');
       }

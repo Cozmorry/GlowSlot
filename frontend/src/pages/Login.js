@@ -33,15 +33,30 @@ const Login = () => {
         body: JSON.stringify(form),
       });
       const data = await res.json();
+      console.log('Login response data:', data);
       if (res.ok && data.token) {
-        login(data.user);
+        // Include token in user data
+        const userWithToken = { ...data.user, token: data.token };
+        console.log('User data with token:', userWithToken);
+        login(userWithToken);
         
-        // Redirect based on role
-        if (data.user.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/home');
-        }
+        // Add a small delay to ensure state is updated
+        setTimeout(() => {
+          // Redirect based on role
+          console.log('User role:', data.user.role);
+          console.log('About to navigate - role check:', data.user.role === 'admin' ? 'ADMIN' : 'USER');
+          if (data.user.role === 'admin') {
+            console.log('Redirecting to admin dashboard');
+            console.log('Current URL before redirect:', window.location.href);
+            navigate('/admin');
+            console.log('Navigate called for /admin');
+            console.log('Navigation should have happened to /admin');
+          } else {
+            console.log('Redirecting to home');
+            navigate('/home');
+            console.log('Navigation should have happened to /home');
+          }
+        }, 100);
       } else {
         setError(data.message || 'Login failed');
       }
@@ -58,7 +73,9 @@ const Login = () => {
       const data = await signInWithGoogle();
 
       if (data.token) {
-        login(data.user);
+        // Include token in user data
+        const userWithToken = { ...data.user, token: data.token };
+        login(userWithToken);
 
         // Redirect based on role
         if (data.user.role === 'admin') {

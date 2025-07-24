@@ -4,9 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 
 export default function AdminDashboard() {
+  console.log('AdminDashboard component mounting...');
+  
   const navigate = useNavigate();
   const { user: authUser, logout, getToken } = useAuth();
   const { showError } = useNotification();
+  console.log('AdminDashboard hooks initialized successfully');
   const [activeTab, setActiveTab] = useState('overview');
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
@@ -44,17 +47,27 @@ export default function AdminDashboard() {
 
   // Listen for auth changes
   useEffect(() => {
+    console.log('AdminDashboard authUser:', authUser);
+    console.log('AdminDashboard authUser type:', typeof authUser);
+    console.log('AdminDashboard authUser keys:', authUser ? Object.keys(authUser) : 'null');
+    
     if (!authUser) {
+      console.log('No authUser, redirecting to login');
       navigate('/login');
       return;
     }
 
+    console.log('AuthUser role:', authUser.role);
+    console.log('AuthUser role type:', typeof authUser.role);
     if (authUser.role !== 'admin') {
+      console.log('User is not admin, logging out and redirecting');
+      console.log('Expected: admin, Got:', authUser.role);
       logout();
       navigate('/login');
       return;
     }
 
+    console.log('User is admin, setting user and fetching stats');
     setUser(authUser);
     fetchStats();
   }, [authUser, navigate, logout]);
@@ -570,17 +583,18 @@ function AppointmentsTab({ isMobile, showError }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     fetchAppointments();
-  }, []);
+  }, [filter]);
 
   const fetchAppointments = async () => {
     try {
       setLoading(true);
       const token = getToken();
       
-      const response = await fetch('http://localhost:5000/api/admin/appointments', {
+      const response = await fetch(`http://localhost:5000/api/admin/appointments?filter=${filter}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -691,10 +705,58 @@ function AppointmentsTab({ isMobile, showError }) {
         <p style={{ 
           margin: 0, 
           color: '#718096',
-          fontSize: '16px'
+          fontSize: '16px',
+          marginBottom: '20px'
         }}>
           Manage and update appointment statuses
         </p>
+        
+        {/* Filter Controls */}
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          flexWrap: 'wrap',
+          marginBottom: '20px'
+        }}>
+          {[
+            { value: 'all', label: 'All Appointments' },
+            { value: 'upcoming', label: 'Upcoming' },
+            { value: 'pending', label: 'Pending/Paid/Confirmed' },
+            { value: 'completed', label: 'Completed' }
+          ].map(filterOption => (
+            <button
+              key={filterOption.value}
+              onClick={() => setFilter(filterOption.value)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '20px',
+                border: 'none',
+                background: filter === filterOption.value 
+                  ? '#e91e63' 
+                  : 'rgba(233, 30, 99, 0.1)',
+                color: filter === filterOption.value 
+                  ? '#fff' 
+                  : '#e91e63',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (filter !== filterOption.value) {
+                  e.target.style.background = 'rgba(233, 30, 99, 0.2)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (filter !== filterOption.value) {
+                  e.target.style.background = 'rgba(233, 30, 99, 0.1)';
+                }
+              }}
+            >
+              {filterOption.label}
+            </button>
+          ))}
+        </div>
       </div>
       
       {appointments.length === 0 ? (
@@ -707,7 +769,12 @@ function AppointmentsTab({ isMobile, showError }) {
         }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>📅</div>
           <h3 style={{ margin: '0 0 8px 0', color: '#2d3748' }}>No Appointments</h3>
-          <p style={{ margin: 0 }}>No upcoming appointments found.</p>
+          <p style={{ margin: 0 }}>
+            {filter === 'all' && 'No appointments found.'}
+            {filter === 'upcoming' && 'No upcoming appointments found.'}
+            {filter === 'pending' && 'No pending, paid, or confirmed appointments found.'}
+            {filter === 'completed' && 'No completed appointments found.'}
+          </p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -799,7 +866,47 @@ function AppointmentsTab({ isMobile, showError }) {
                       marginLeft: isMobile ? '0' : '20px',
                       justifyContent: isMobile ? 'space-between' : 'flex-start'
                     }}>
-                      {/* Show Confirm button only for paid appointments */}
+                      {/* Show Confirm button for pending appointments */}
+                      {appointment.status === 'pending' && (
+                        <button
+                          onClick={() => updateAppointmentStatus(appointment._id, 'confirmed')}
+                          style={{
+                            padding: '8px 16px',
+                            background: '#4caf50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          Confirm Appointment
+                        </button>
+                      )}
+                      
+                      {/* Show Complete button for pending appointments (for testing) */}
+                      {appointment.status === 'pending' && (
+                        <button
+                          onClick={() => updateAppointmentStatus(appointment._id, 'completed')}
+                          style={{
+                            padding: '8px 16px',
+                            background: '#2196f3',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          Mark Complete
+                        </button>
+                      )}
+                      
+                      {/* Show Confirm button for paid appointments */}
                       {appointment.status === 'paid' && (
                   <button
                     onClick={() => updateAppointmentStatus(appointment._id, 'confirmed')}
@@ -839,8 +946,8 @@ function AppointmentsTab({ isMobile, showError }) {
                   </button>
                       )}
                   
-                      {/* Show Cancel button for paid or confirmed appointments */}
-                      {(appointment.status === 'paid' || appointment.status === 'confirmed') && (
+                      {/* Show Cancel button for pending, paid, or confirmed appointments */}
+                      {(appointment.status === 'pending' || appointment.status === 'paid' || appointment.status === 'confirmed') && (
                   <button
                     onClick={() => updateAppointmentStatus(appointment._id, 'cancelled')}
                     style={{

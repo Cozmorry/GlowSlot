@@ -4,16 +4,26 @@ const adminAuth = require('../middleware/adminAuth');
 const Booking = require('../models/Booking');
 const User = require('../models/User');
 
-// Get all upcoming appointments
+// Get all appointments (except cancelled)
 router.get('/appointments', adminAuth, async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const { filter = 'all' } = req.query;
     
-    const appointments = await Booking.find({
-      dateTime: { $gte: today },
-      status: { $in: ['pending', 'paid', 'confirmed'] }
-    }).sort({ dateTime: 1 });
+    let query = { status: { $ne: 'cancelled' } };
+    
+    // Apply filters based on query parameter
+    if (filter === 'upcoming') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      query.dateTime = { $gte: today };
+      query.status = { $in: ['pending', 'paid', 'confirmed'] };
+    } else if (filter === 'completed') {
+      query.status = 'completed';
+    } else if (filter === 'pending') {
+      query.status = { $in: ['pending', 'paid', 'confirmed'] };
+    }
+    
+    const appointments = await Booking.find(query).sort({ dateTime: 1 });
     
     res.json(appointments);
   } catch (err) {

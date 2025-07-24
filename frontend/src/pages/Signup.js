@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 const Signup = () => {
+  const { login } = useAuth();
+  const { showSuccess, showError } = useNotification();
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '', role: 'customer' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,13 +24,12 @@ const Signup = () => {
     setError('');
     setSuccess(false);
     if (form.password !== form.confirm) {
-      setError('Passwords do not match');
+      showError('Passwords do not match');
       setLoading(false);
       return;
     }
 
     try {
-      // Use a direct URL for now, can be updated to use environment variables later
       const res = await fetch(`http://localhost:5000/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,11 +43,13 @@ const Signup = () => {
       const data = await res.json();
       if (res.ok) {
         setSuccess(true);
+        showSuccess('Account created successfully! Please check your email to verify your account.');
       } else {
-        setError(data.message || 'Signup failed');
+        showError(data.message || 'Signup failed');
       }
     } catch (err) {
-      setError('Network error');
+      console.error('Signup error:', err);
+      showError('Network error. Please try again.');
     }
     setLoading(false);
   };

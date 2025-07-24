@@ -7,8 +7,8 @@ const isDesktopWidth = () => window.innerWidth >= 900;
 
 export default function Settings() {
   const { theme } = useTheme();
-  const { user: authUser, updateUser } = useAuth();
-  const { showSuccess } = useNotification();
+  const { user: authUser, updateUser, getToken } = useAuth();
+  const { showSuccess, showError } = useNotification();
   const [isDesktop, setIsDesktop] = React.useState(isDesktopWidth());
   const [themeMode, setThemeMode] = React.useState(localStorage.getItem('theme') || 'light');
   const [name, setName] = React.useState('');
@@ -40,30 +40,127 @@ export default function Settings() {
     window.location.reload(); // To apply theme immediately
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     
-    // Update user data
-    const updatedUser = {
-      ...user,
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      avatar: avatar
-    };
-    
-    updateUser(updatedUser);
-    setUser(updatedUser);
-    
-    showSuccess('Profile updated successfully!');
+    try {
+      // Update user data locally first
+      const updatedUser = {
+        ...user,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        avatar: avatar
+      };
+      
+      // Get token from AuthContext
+      const token = getToken();
+      
+      console.log('Token retrieved:', token ? 'Token found' : 'No token');
+      console.log('User data:', user);
+      
+      if (!token) {
+        showError('Authentication token not found. Please log in again.');
+        return;
+      }
+      
+      // Send update to server
+      const response = await fetch(`http://localhost:5000/auth/profile/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          avatar: avatar
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Update with server response data
+        updateUser(data.user);
+        setUser(data.user);
+        showSuccess('Profile updated successfully!');
+      } else {
+        let errorMessage = 'Failed to update profile';
+        
+        if (response.status === 413) {
+          errorMessage = 'Profile picture is too large. Please try a smaller image.';
+        } else {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch (parseError) {
+            // If response is not JSON, use status text
+            errorMessage = response.statusText || errorMessage;
+          }
+        }
+        
+        showError(errorMessage);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      showError('Network error while updating profile');
+    }
   };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        showError('Image file is too large. Please select an image smaller than 2MB.');
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        showError('Please select a valid image file.');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
-        setAvatar(e.target.result);
+        // Compress the image before setting it
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Set maximum dimensions
+          const maxWidth = 200;
+          const maxHeight = 200;
+          
+          let { width, height } = img;
+          
+          // Calculate new dimensions
+          if (width > height) {
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Convert to base64 with reduced quality
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          setAvatar(compressedDataUrl);
+        };
+        img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -162,6 +259,14 @@ export default function Settings() {
                     style={{ display: 'none' }}
                   />
                 </label>
+                <div style={{ 
+                  fontSize: 12, 
+                  color: '#718096', 
+                  marginTop: 8,
+                  textAlign: 'center'
+                }}>
+                  Max 2MB • JPG, PNG, GIF
+                </div>
               </div>
             </div>
 
