@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 export default function Checkout() {
   const { theme } = useTheme();
+  const { user } = useAuth();
+  const { showSuccess, showError } = useNotification();
   const navigate = useNavigate();
   const [showMpesa, setShowMpesa] = useState(false);
   const [showPaypal, setShowPaypal] = useState(false);
@@ -23,23 +27,22 @@ export default function Checkout() {
   const handleDone = async () => {
     try {
       setLoading(true);
-      const user = JSON.parse(localStorage.getItem('user'));
       
       if (!user || !user.id) {
-        alert('Please login to complete your booking');
+        showError('Please login to complete your booking');
         navigate('/login');
         return;
       }
       const userId = user.id;
 
-      // Update booking status to confirmed
+      // Update booking status to paid (pending admin confirmation)
       const response = await fetch('http://localhost:5000/api/bookings/updateStatus', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          status: 'confirmed',
+          status: 'paid',
           userId: userId
         })
       });
@@ -54,11 +57,11 @@ export default function Checkout() {
 
       // Success flow
       localStorage.removeItem('cartTotal');
-      alert('Payment successful! Your booking is confirmed.');
+      showSuccess('Payment successful! Your booking is paid and pending admin confirmation.');
       navigate('/cart');
     } catch (error) {
       console.error('Error updating booking status:', error);
-      alert(error.message || 'Error updating booking status. Please try again.');
+      showError(error.message || 'Error updating booking status. Please try again.');
     } finally {
       setLoading(false);
     }

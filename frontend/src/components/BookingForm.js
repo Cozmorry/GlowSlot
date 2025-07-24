@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import Modal from './Modal';
 
 export default function BookingForm({ open, onClose, service, onSuccess, category }) {
+  const { user } = useAuth();
+  const { showSuccess, showError } = useNotification();
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [dateTime, setDateTime] = useState('');
@@ -17,16 +20,14 @@ export default function BookingForm({ open, onClose, service, onSuccess, categor
 
     try {
       // Check if user is logged in
-      const userJson = localStorage.getItem('user');
-      if (!userJson) {
-        setError('Please login to make a booking');
+      if (!user) {
+        showError('Please login to make a booking');
         setLoading(false);
         return;
       }
       
-      const user = JSON.parse(userJson);
-      if (!user || !user.id) {
-        setError('Please login to make a booking');
+      if (!user.id) {
+        showError('Please login to make a booking');
         setLoading(false);
         return;
       }
@@ -77,16 +78,16 @@ export default function BookingForm({ open, onClose, service, onSuccess, categor
 
       if (res.ok) {
         // Show success message and close modal
-        alert(data.message || 'Booking successful! You can view your booking in the cart.');
+        showSuccess(data.message || 'Booking successful! You can view your booking in the cart.');
         onSuccess && onSuccess(data.booking);
         onClose();
       } else {
         console.error('Booking error:', data);
-        setError(data.message || 'Booking failed. Please try again or contact support.');
+        showError(data.message || 'Booking failed. Please try again or contact support.');
       }
     } catch (err) {
       console.error('Error in booking:', err);
-      setError('Network error');
+      showError('Network error. Please check your connection and try again.');
     }
 
     setLoading(false);

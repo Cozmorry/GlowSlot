@@ -20,12 +20,15 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .then(() => console.log('MongoDB connected'))
 .catch((err) => console.error('MongoDB connection error:', err));
-
 const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes); // It's okay to use the same routes in two places
 
 const bookingRoutes = require('./routes/bookings');
 app.use('/api/bookings', bookingRoutes);
+
+const adminRoutes = require('./routes/admin');
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

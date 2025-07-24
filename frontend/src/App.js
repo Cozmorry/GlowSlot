@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Profile from './pages/Profile';
 import LoadingPage from './pages/LoadingPage';
 import Settings from './pages/Settings';
@@ -25,6 +26,7 @@ import Barber from './pages/Barber';
 import Piercings from './pages/Piercings';
 import Tattoo from './pages/Tattoo';
 import Checkout from './pages/Checkout';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   const [loading, setLoading] = React.useState(true);
@@ -64,7 +66,8 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
+        <NotificationProvider>
+          <BrowserRouter>
           <Routes>
             {/* Redirect root to login */}
           <Route path="/" element={<Navigate to="/login" />} />
@@ -85,13 +88,13 @@ function App() {
           <Route path="/barber" element={<MainLayout><Barber /></MainLayout>} />
           <Route path="/piercings" element={<MainLayout><Piercings /></MainLayout>} />
           <Route path="/tattoo" element={<MainLayout><Tattoo /></MainLayout>} />
-          <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
-
-            {/* Standalone Routes */}
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
+          <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />{/* Standalone Routes */}
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </BrowserRouter>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

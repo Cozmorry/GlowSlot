@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const VerifyEmail = () => {
+  const { login } = useAuth();
   const [status, setStatus] = useState('verifying');
   const location = useLocation();
   const navigate = useNavigate();
@@ -18,8 +20,7 @@ const VerifyEmail = () => {
       .then(res => res.json())
       .then(data => {
         if (data.token) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
+          login(data.user);
           setStatus('success');
           setTimeout(() => navigate('/dashboard'), 2000);
         } else {

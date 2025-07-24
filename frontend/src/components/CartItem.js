@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNotification } from '../context/NotificationContext';
 
 const CartItem = ({ booking, theme }) => {
+  const { showError, showSuccess } = useNotification();
   // Format the date and time for display
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
@@ -37,12 +39,13 @@ const CartItem = ({ booking, theme }) => {
                   if (response.ok) {
                     // Call the parent's onCancel handler to remove from state
                     booking.onCancel && booking.onCancel(booking._id);
+                    showSuccess('Booking cancelled successfully');
                   } else {
-                    alert('Failed to cancel booking. Please try again.');
+                    showError('Failed to cancel booking. Please try again.');
                   }
                 } catch (error) {
                   console.error('Error canceling booking:', error);
-                  alert('Error canceling booking. Please try again.');
+                  showError('Error canceling booking. Please try again.');
                 }
               }
             }}

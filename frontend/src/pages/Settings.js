@@ -1,20 +1,38 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
+import { FaUser, FaCamera } from 'react-icons/fa';
 const isDesktopWidth = () => window.innerWidth >= 900;
 
 export default function Settings() {
   const { theme } = useTheme();
+  const { user: authUser, updateUser } = useAuth();
+  const { showSuccess } = useNotification();
   const [isDesktop, setIsDesktop] = React.useState(isDesktopWidth());
   const [themeMode, setThemeMode] = React.useState(localStorage.getItem('theme') || 'light');
-  const [name, setName] = React.useState('JACKSON');
-  const [email] = React.useState('jackson69@gmail.com');
-  const [phone, setPhone] = React.useState('+25471234567');
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [phone, setPhone] = React.useState('');
+  const [avatar, setAvatar] = React.useState('');
+  const [user, setUser] = React.useState(null);
 
   React.useEffect(() => {
     const handleResize = () => setIsDesktop(isDesktopWidth());
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Load user data on component mount
+  React.useEffect(() => {
+    if (authUser) {
+      setUser(authUser);
+      setName(authUser.name || '');
+      setEmail(authUser.email || '');
+      setPhone(authUser.phone || '');
+      setAvatar(authUser.avatar || '');
+    }
+  }, [authUser]);
 
   const handleThemeChange = (e) => {
     setThemeMode(e.target.value);
@@ -24,8 +42,31 @@ export default function Settings() {
 
   const handleSave = (e) => {
     e.preventDefault();
-    // Save logic here (API call, etc.)
-    alert('Settings saved!');
+    
+    // Update user data
+    const updatedUser = {
+      ...user,
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      avatar: avatar
+    };
+    
+    updateUser(updatedUser);
+    setUser(updatedUser);
+    
+    showSuccess('Profile updated successfully!');
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatar(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -61,12 +102,76 @@ export default function Settings() {
         <form onSubmit={handleSave} style={{ width: '100%' }}>
           <div style={{ marginBottom: 28 }}>
             <h3 style={{ fontWeight: 600, fontSize: 18, marginBottom: 12, color: theme.accent }}>Account</h3>
+            
+            {/* Avatar Section */}
+            <div style={{ marginBottom: 20, textAlign: 'center' }}>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <div style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  background: avatar ? 'none' : 'linear-gradient(135deg, #e91e63 0%, #c2185b 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 12px auto',
+                  border: '3px solid #fff',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+                  overflow: 'hidden'
+                }}>
+                  {avatar ? (
+                    <img 
+                      src={avatar} 
+                      alt="Profile" 
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover' 
+                      }} 
+                    />
+                  ) : (
+                    <FaUser size={32} color="white" />
+                  )}
+                </div>
+                <label style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 16px',
+                  background: 'rgba(233, 30, 99, 0.1)',
+                  color: '#e91e63',
+                  borderRadius: 20,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  border: '1px solid rgba(233, 30, 99, 0.2)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(233, 30, 99, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(233, 30, 99, 0.1)';
+                }}>
+                  <FaCamera size={14} />
+                  Change Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              </div>
+            </div>
+
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontWeight: 500, fontSize: 15, color: theme.text, opacity: 0.7 }}>Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
+                placeholder="Enter your name"
                 style={{
                   width: '100%',
                   padding: '0.7rem',
@@ -85,7 +190,8 @@ export default function Settings() {
               <input
                 type="email"
                 value={email}
-                readOnly
+                onChange={e => setEmail(e.target.value)}
+                placeholder="Enter your email"
                 style={{
                   width: '100%',
                   padding: '0.7rem',
@@ -95,7 +201,6 @@ export default function Settings() {
                   fontSize: 16,
                   background: theme.input,
                   color: theme.text,
-                  opacity: 0.7,
                   marginBottom: 8,
                 }}
               />
@@ -106,6 +211,7 @@ export default function Settings() {
                 type="tel"
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
+                placeholder="Enter your phone number"
                 style={{
                   width: '100%',
                   padding: '0.7rem',

@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CartItem from '../components/CartItem';
+import { FaHistory, FaShoppingCart, FaCheckCircle, FaTimesCircle, FaClock, FaSpinner } from 'react-icons/fa';
 
 const isDesktopWidth = () => window.innerWidth >= 900;
 
 export default function Cart() {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isDesktop, setIsDesktop] = React.useState(isDesktopWidth());
   const [bookings, setBookings] = useState([]);
+  const [orderHistory, setOrderHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('cart'); // 'cart' or 'history'
 
   const calculateTotal = () => {
     return bookings.reduce((total, booking) => total + (booking.price || 0), 0);
@@ -25,20 +30,19 @@ export default function Cart() {
 
   useEffect(() => {
     fetchBookings();
-  }, []);const fetchBookings = async () => {
+    fetchOrderHistory();
+  }, []);  const fetchBookings = async () => {
     try {
       setLoading(true);
       
       // Check if user is logged in
-      const userJson = localStorage.getItem('user');
-      if (!userJson) {
+      if (!user) {
         setError('Please login to view your bookings');
         setLoading(false);
         return;
       }
       
-      const user = JSON.parse(userJson);
-      if (!user || !user.id) {
+      if (!user.id) {
         setError('Please login to view your bookings');
         setLoading(false);
         return;
@@ -60,9 +64,84 @@ export default function Cart() {
     }
   };
 
+  const fetchOrderHistory = async () => {
+    try {
+      // Check if user is logged in
+      if (!user) {
+        return;
+      }
+      
+      if (!user.id) {
+        return;
+      }
+      
+      const res = await fetch(`http://localhost:5000/api/bookings/history?userId=${user.id}`);
+      const data = await res.json();
+      
+      if (res.ok) {
+        setOrderHistory(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Error fetching order history:', err);
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'paid':
+        return <FaCheckCircle size={16} color="#10B981" />;
+      case 'confirmed':
+        return <FaCheckCircle size={16} color="#3B82F6" />;
+      case 'completed':
+        return <FaCheckCircle size={16} color="#059669" />;
+      case 'cancelled':
+        return <FaTimesCircle size={16} color="#EF4444" />;
+      case 'pending':
+        return <FaClock size={16} color="#F59E0B" />;
+      default:
+        return <FaSpinner size={16} color="#6B7280" />;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'paid':
+        return '#10B981';
+      case 'confirmed':
+        return '#3B82F6';
+      case 'completed':
+        return '#059669';
+      case 'cancelled':
+        return '#EF4444';
+      case 'pending':
+        return '#F59E0B';
+      default:
+        return '#6B7280';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'paid':
+        return 'Paid - Pending Allocation';
+      case 'confirmed':
+        return 'Confirmed';
+      case 'completed':
+        return 'Completed';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'pending':
+        return 'Pending';
+      default:
+        return 'Unknown';
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
-  }if (error) {
+  }
+
+  if (error) {
     // If the error is about not being logged in, show a nicer message with a login button
     if (error.includes('Please login')) {
       return (
@@ -137,76 +216,248 @@ export default function Cart() {
       }}>
         <h2 style={{ fontWeight: 700, fontSize: 24, marginBottom: 24, color: theme.text }}>My Bookings</h2>
         
-        {bookings.length === 0 ? (
-          <div style={{ 
-            textAlign: 'center',
-            padding: '40px',
-            backgroundColor: theme.card,
-            borderRadius: '8px',
-            color: theme.text,
-            width: '100%',
-            boxSizing: 'border-box'
-          }}>
-            No bookings found. Start by booking a service!
-          </div>
-        ) : (
-          <div style={{ width: '100%' }}>
-            {bookings.map(booking => (
-              <CartItem 
-                key={booking._id} 
-                booking={{
-                  ...booking,
-                  onCancel: (bookingId) => {
-                    setBookings(currentBookings => 
-                      currentBookings.filter(b => b._id !== bookingId)
-                    );
-                  }
-                }}
-                theme={theme}
-              />
-            ))}
-            <div style={{
-              marginTop: '20px',
-              borderTop: `1px solid ${theme.border}`,
-              paddingTop: '20px',
+        {/* Tab Navigation */}
+        <div style={{
+          display: 'flex',
+          width: '100%',
+          marginBottom: 24,
+          borderBottom: `1px solid ${theme.border}`,
+        }}>
+          <button
+            onClick={() => setActiveTab('cart')}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              background: activeTab === 'cart' ? theme.accent : 'transparent',
+              color: activeTab === 'cart' ? 'white' : theme.text,
+              border: 'none',
+              borderBottom: activeTab === 'cart' ? `2px solid ${theme.accent}` : 'none',
+              cursor: 'pointer',
+              fontSize: 16,
+              fontWeight: 600,
               display: 'flex',
-              flexDirection: 'column',
-              gap: '15px'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: '18px',
-                fontWeight: 'bold'
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
+          >
+            <FaShoppingCart size={16} />
+            Cart ({bookings.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              background: activeTab === 'history' ? theme.accent : 'transparent',
+              color: activeTab === 'history' ? 'white' : theme.text,
+              border: 'none',
+              borderBottom: activeTab === 'history' ? `2px solid ${theme.accent}` : 'none',
+              cursor: 'pointer',
+              fontSize: 16,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
+          >
+            <FaHistory size={16} />
+            Order History ({orderHistory.length})
+          </button>
+        </div>
+        
+        {activeTab === 'cart' ? (
+          // Cart Tab
+          <>
+            {bookings.length === 0 ? (
+              <div style={{ 
+                textAlign: 'center',
+                padding: '40px',
+                backgroundColor: theme.card,
+                borderRadius: '8px',
+                color: theme.text,
+                width: '100%',
+                boxSizing: 'border-box'
               }}>
-                <span>Total:</span>
-                <span style={{ color: '#FF69B4' }}>KSH {calculateTotal()}</span>
+                No bookings found. Start by booking a service!
               </div>
-              <button
-                onClick={() => {
-                  const total = calculateTotal();
-                  localStorage.setItem('cartTotal', total);
-                  navigate('/checkout', { state: { total } });
-                }}
-                style={{
-                  backgroundColor: bookings.length === 0 ? '#ffc0dc' : '#FF69B4',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
-                  fontSize: '16px',
-                  cursor: bookings.length === 0 ? 'not-allowed' : 'pointer',
-                  width: '100%',
-                  transition: 'background-color 0.2s',
-                  opacity: bookings.length === 0 ? 0.7 : 1
-                }}
-                disabled={bookings.length === 0}
-              >
-                Proceed to Checkout
-              </button>
-            </div>
-          </div>
+            ) : (
+              <div style={{ width: '100%' }}>
+                {bookings.map(booking => (
+                  <CartItem 
+                    key={booking._id} 
+                    booking={{
+                      ...booking,
+                      onCancel: (bookingId) => {
+                        setBookings(currentBookings => 
+                          currentBookings.filter(b => b._id !== bookingId)
+                        );
+                      }
+                    }}
+                    theme={theme}
+                  />
+                ))}
+                <div style={{
+                  marginTop: '20px',
+                  borderTop: `1px solid ${theme.border}`,
+                  paddingTop: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '15px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                  }}>
+                    <span>Total:</span>
+                    <span style={{ color: '#FF69B4' }}>KSH {calculateTotal()}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const total = calculateTotal();
+                      localStorage.setItem('cartTotal', total);
+                      navigate('/checkout', { state: { total } });
+                    }}
+                    style={{
+                      backgroundColor: bookings.length === 0 ? '#ffc0dc' : '#FF69B4',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '12px 24px',
+                      fontSize: '16px',
+                      cursor: bookings.length === 0 ? 'not-allowed' : 'pointer',
+                      width: '100%',
+                      transition: 'background-color 0.2s',
+                      opacity: bookings.length === 0 ? 0.7 : 1
+                    }}
+                    disabled={bookings.length === 0}
+                  >
+                    Proceed to Checkout
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          // Order History Tab
+          <>
+            {orderHistory.length === 0 ? (
+              <div style={{ 
+                textAlign: 'center',
+                padding: '40px',
+                backgroundColor: theme.card,
+                borderRadius: '8px',
+                color: theme.text,
+                width: '100%',
+                boxSizing: 'border-box'
+              }}>
+                No order history found. Your completed orders will appear here!
+              </div>
+            ) : (
+              <div style={{ width: '100%' }}>
+                {orderHistory.map(order => (
+                  <div
+                    key={order._id}
+                    style={{
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: 12,
+                      padding: 16,
+                      marginBottom: 16,
+                      background: theme.card,
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: 12,
+                    }}>
+                      <div>
+                        <h3 style={{
+                          margin: 0,
+                          fontSize: 18,
+                          fontWeight: 600,
+                          color: theme.text,
+                        }}>
+                          {order.service}
+                        </h3>
+                        <p style={{
+                          margin: '4px 0 0 0',
+                          fontSize: 14,
+                          color: theme.text,
+                          opacity: 0.7,
+                        }}>
+                          Staff: {order.staff}
+                        </p>
+                        <p style={{
+                          margin: '4px 0 0 0',
+                          fontSize: 14,
+                          color: theme.text,
+                          opacity: 0.7,
+                        }}>
+                          Date: {new Date(order.dateTime).toLocaleDateString()}
+                        </p>
+                        <p style={{
+                          margin: '4px 0 0 0',
+                          fontSize: 14,
+                          color: theme.text,
+                          opacity: 0.7,
+                        }}>
+                          Time: {new Date(order.dateTime).toLocaleTimeString()}
+                        </p>
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '6px 12px',
+                        borderRadius: 20,
+                        background: `${getStatusColor(order.status)}20`,
+                        border: `1px solid ${getStatusColor(order.status)}40`,
+                      }}>
+                        {getStatusIcon(order.status)}
+                        <span style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: getStatusColor(order.status),
+                        }}>
+                          {getStatusText(order.status)}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      paddingTop: 12,
+                      borderTop: `1px solid ${theme.border}`,
+                    }}>
+                      <span style={{
+                        fontSize: 16,
+                        fontWeight: 600,
+                        color: theme.text,
+                      }}>
+                        KSH {order.price}
+                      </span>
+                      {order.status === 'paid' && (
+                        <span style={{
+                          fontSize: 12,
+                          color: '#F59E0B',
+                          fontStyle: 'italic',
+                        }}>
+                          Awaiting admin confirmation
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

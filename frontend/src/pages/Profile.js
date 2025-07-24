@@ -1,29 +1,31 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { FaUser, FaPhone, FaEnvelope, FaSignOutAlt, FaBookOpen, FaUsers, FaCog, FaInfoCircle, FaQuestionCircle, FaEdit } from 'react-icons/fa';
 const navItems = [
-  { label: 'Book with us', route: '/book' },
-  { label: 'Staff', route: '/staff' },
-  { label: 'Services', route: '/services' },
-  { label: 'About us', route: '/about' },
-  { label: 'FAQs', route: '/faqs' },
+  { label: 'Book with us', route: '/home', icon: FaBookOpen },
+  { label: 'Staff', route: '/staff', icon: FaUsers },
+  { label: 'Services', route: '/services', icon: FaCog },
+  { label: 'About us', route: '/about', icon: FaInfoCircle },
+  { label: 'FAQs', route: '/faqs', icon: FaQuestionCircle },
 ];
 
 const isDesktopWidth = () => window.innerWidth >= 900;
 
 const Profile = () => {
   const { theme, mode } = useTheme();
+  const { user: authUser, logout } = useAuth();
   const [isDesktop, setIsDesktop] = React.useState(isDesktopWidth());
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
 
   React.useEffect(() => {
     // Check for user data
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (authUser) {
+      setUser(authUser);
     }
-  }, []);
+  }, [authUser]);
 
   React.useEffect(() => {
     const handleResize = () => setIsDesktop(isDesktopWidth());
@@ -31,27 +33,11 @@ const Profile = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    setUser(null);
-                navigate('/login');
-};
-
-  // Button color logic
-  const getButtonStyle = () => {
-    if (mode === 'light') {
-      return {
-        background: theme.accent,
-        color: '#fff',
-      };
-    } else {
-      return {
-        background: theme.card,
-        color: theme.text,
-      };
-    }
+    logout();
+    navigate('/login');
   };
+
+
 
   return (
     <div style={{
@@ -66,54 +52,167 @@ const Profile = () => {
       boxSizing: 'border-box',
       overflowX: 'hidden',
       color: theme.text,
-      background: theme.background,
-    }}>{/* Profile card */}
+      background: 'linear-gradient(135deg, #f5c6ea 0%, #e91e63 100%)',
+      minHeight: '100vh',
+    }}>
+      {/* Profile card */}
       <div style={{
         width: isDesktop ? 420 : '100%',
         maxWidth: '100%',
         margin: isDesktop ? '0 auto 32px auto' : '0 auto 24px auto',
-        background: theme.card,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
         borderRadius: 24,
-        boxShadow: isDesktop ? '0 2px 16px 0 #eee' : 'none',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
         padding: isDesktop ? '2.5rem 2rem 2rem 2rem' : '1.5rem 1.2rem 1.2rem 1.2rem',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         boxSizing: 'border-box',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
       }}>
         {user ? (
           <>
-            <img
-              src={user.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg'}
-              alt="avatar"
+            <div style={{
+              width: 100,
+              height: 100,
+              borderRadius: '50%',
+              background: user.avatar ? 'none' : 'linear-gradient(135deg, #e91e63 0%, #c2185b 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 20,
+              boxShadow: '0 8px 24px rgba(233, 30, 99, 0.3)',
+              border: '4px solid rgba(255, 255, 255, 0.3)',
+              overflow: 'hidden',
+            }}>
+              {user.avatar ? (
+                <img 
+                  src={user.avatar} 
+                  alt="Profile" 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover' 
+                  }} 
+                />
+              ) : (
+                <FaUser size={40} color="white" />
+              )}
+            </div>
+            <h2 style={{ 
+              fontWeight: 700, 
+              fontSize: 24, 
+              color: '#2d3748', 
+              marginBottom: 8,
+              textAlign: 'center'
+            }}>
+              {user.name}
+            </h2>
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: 8, 
+              marginBottom: 20,
+              alignItems: 'center'
+            }}>
+              {user.phone && (
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 8,
+                  color: '#718096',
+                  fontSize: 14
+                }}>
+                  <FaPhone size={14} />
+                  <span>{user.phone}</span>
+                </div>
+              )}
+              {user.email && (
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 8,
+                  color: '#718096',
+                  fontSize: 14
+                }}>
+                  <FaEnvelope size={14} />
+                  <span>{user.email}</span>
+                </div>
+              )}
+              {!user.phone && !user.email && (
+                <div style={{ 
+                  color: '#718096',
+                  fontSize: 14,
+                  textAlign: 'center'
+                }}>
+                  No contact information added
+                </div>
+              )}
+            </div>
+            <div style={{ 
+              display: 'flex', 
+              gap: 12, 
+              marginBottom: 16 
+            }}>
+              <button
+                onClick={() => navigate('/settings')}
+                style={{
+                  padding: '10px 20px',
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  color: '#2d3748',
+                  border: '1px solid rgba(233, 30, 99, 0.3)',
+                  borderRadius: 16,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(255, 255, 255, 1)';
+                  e.target.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(255, 255, 255, 0.9)';
+                  e.target.style.transform = 'translateY(0)';
+                }}
+              >
+                <FaEdit size={14} />
+                Edit Profile
+              </button>
+              <button
+                onClick={handleLogout}
               style={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                border: '3px solid #fff',
-                objectFit: 'cover',
-                marginBottom: 16,
-              }}
-            />
-            <span style={{ fontWeight: 700, fontSize: 18, color: theme.text, marginBottom: 4 }}>{user.name}</span>
-            <span style={{ fontSize: 14, color: theme.text, opacity: 0.8, marginBottom: 2 }}>{user.phone || 'No phone added'}</span>
-            <span style={{ fontSize: 14, color: theme.text, opacity: 0.8 }}>{user.email}</span>
-            <button
-              onClick={handleLogout}
-              style={{
-                marginTop: 16,
-                padding: '8px 24px',
-                background: theme.accent,
+                padding: '12px 32px',
+                background: 'linear-gradient(135deg, #e91e63 0%, #c2185b 100%)',
                 color: '#fff',
                 border: 'none',
-                borderRadius: 16,
+                borderRadius: 20,
                 cursor: 'pointer',
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: 600,
+                boxShadow: '0 4px 16px rgba(233, 30, 99, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(233, 30, 99, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 16px rgba(233, 30, 99, 0.3)';
               }}
             >
+              <FaSignOutAlt size={16} />
               Logout
             </button>
+            </div>
           </>
         ) : (
           <button
@@ -134,33 +233,57 @@ const Profile = () => {
         )}
       </div>
       {/* Action buttons */}
-      <div style={{ width: isDesktop ? 420 : '100%', maxWidth: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box' }}>
-        {navItems.map((item, idx) => (
-          <button
-            key={item.label}
-            style={{
-              width: '100%',
-              fontWeight: 700,
-              fontSize: 26,
-              marginBottom: 0,
-              padding: isDesktop ? '1.1rem 0' : '1.1rem 0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 12,
-              border: 'none',
-              borderRadius: 24,
-              boxShadow: '0 2px 16px 0 #222',
-              cursor: 'pointer',
-              transition: 'background 0.2s',
-              boxSizing: 'border-box',
-              ...getButtonStyle(),
-            }}
-            onClick={() => navigate(item.route)}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div style={{ 
+        width: isDesktop ? 420 : '100%', 
+        maxWidth: '100%', 
+        margin: '0 auto', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 16, 
+        boxSizing: 'border-box' 
+      }}>
+        {navItems.map((item, idx) => {
+          const IconComponent = item.icon;
+          return (
+            <button
+              key={item.label}
+              style={{
+                width: '100%',
+                fontWeight: 600,
+                fontSize: 18,
+                padding: '16px 24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 12,
+                border: 'none',
+                borderRadius: 16,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                color: '#2d3748',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxSizing: 'border-box',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
+              onClick={() => navigate(item.route)}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+                e.target.style.background = 'rgba(255, 255, 255, 1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.95)';
+              }}
+            >
+              <IconComponent size={20} color="#e91e63" />
+              {item.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

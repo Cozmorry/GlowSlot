@@ -11,9 +11,8 @@ const signup = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
-  }
-  try {
-    const { name, email, password } = req.body;
+  }try {
+    const { name, email, password, role } = req.body;
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: 'User already exists.' });
@@ -24,7 +23,9 @@ const signup = async (req, res) => {
       { email },
       process.env.JWT_SECRET,
       { expiresIn: '10m' }
-    );
+    );// Only allow 'customer' or 'admin' roles from the client side
+    const validRole = role === 'admin' ? 'admin' : 'customer';
+    
     const user = new User({
       name,
       email,
@@ -32,6 +33,7 @@ const signup = async (req, res) => {
       authProvider: 'local',
       verified: false,
       emailVerificationToken,
+      role: validRole,
     });
     await user.save();
     // Create user in Firebase Auth
@@ -114,9 +116,8 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials.' });
-    }
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    }const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

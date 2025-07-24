@@ -56,7 +56,7 @@ const staffData = [
   {
     id: 7,
     name: 'Aura',
-    specialties: 'Spa, MakeUp',
+    specialties: 'Spa, Makeup',
     rating: 4.8,
     avatar: 'https://randomuser.me/api/portraits/women/4.jpg',
   },
@@ -70,7 +70,7 @@ const staffData = [
   {
     id: 9,
     name: 'Jenelle',
-    specialties: 'Barber, waxing',
+    specialties: 'Barber, Waxing',
     rating: 5.0,
     avatar: 'https://randomuser.me/api/portraits/women/5.jpg',
   },
@@ -84,7 +84,7 @@ const staffData = [
   {
     id: 11,
     name: 'Ashley',
-    specialties: 'MakeUp, Hair',
+    specialties: 'Makeup, Hair',
     rating: 4.9,
     avatar: 'https://randomuser.me/api/portraits/women/6.jpg',
   },

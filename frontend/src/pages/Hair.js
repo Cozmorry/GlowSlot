@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useNotification } from '../context/NotificationContext';
 import { FaStar } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import BookingForm from '../components/BookingForm';
@@ -45,6 +46,7 @@ export const hairServices = [
 
 export default function Hair() {
   const { theme } = useTheme();
+  const { showSuccess } = useNotification();
   const navigate = useNavigate();
   const [bookingOpen, setBookingOpen] = React.useState(false);
   const [selectedService, setSelectedService] = React.useState('');
@@ -71,7 +73,6 @@ export default function Hair() {
         }}
         onClick={() => { console.log('Banner clicked'); navigate('/hair'); }}
         tabIndex={0}
-        role="button"
         aria-label="Go to Hair page"
       >
         <div
@@ -142,7 +143,7 @@ export default function Hair() {
         service={selectedService} 
         category="hair"
         onSuccess={() => {
-          alert("Booking added to cart successfully!");
+          showSuccess("Booking added to cart successfully!");
           setBookingOpen(false);
         }}
       />

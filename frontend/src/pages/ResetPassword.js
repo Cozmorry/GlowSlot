@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const ResetPassword = () => {
+  const { login } = useAuth();
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,8 +26,7 @@ const ResetPassword = () => {
       });
       const data = await res.json();
       if (res.ok && data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        login(data.user);
         setSuccess(true);
         setTimeout(() => navigate('/dashboard'), 2000);
       } else {

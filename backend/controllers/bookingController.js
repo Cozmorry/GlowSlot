@@ -65,7 +65,7 @@ exports.updateBookingStatus = async (req, res) => {
       return res.status(400).json({ message: 'UserId is required' });
     }
 
-    if (!status || !['pending', 'confirmed', 'completed', 'cancelled'].includes(status)) {
+    if (!status || !['pending', 'paid', 'confirmed', 'completed', 'cancelled'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status value' });
     }
     
@@ -154,43 +154,78 @@ function assignRandomStaff(service) {
     'custom': 'tattoo'      // Custom tattoo
   };
 
-  // Map specific services to general categories
-  const serviceCategories = {
-    // Hair services
-    'braids': 'hair',
-    'haircut': 'hair',
-    'coloring': 'hair',
-    'styling': 'hair',
-    'cornrows': 'hair',
-    'dreadlocks': 'hair',
-    'weaving': 'hair',
-    'extensions': 'hair',
-    'blowdry': 'hair',
-    'trim': 'hair',
-    'boxbraids': 'hair',
-    'twistbraids': 'hair',
-    'senegalese': 'hair',
-    'fulseweave': 'hair',
-    'closure': 'hair',
-    'frontal': 'hair',
-    'highlights': 'hair',
-    'balayage': 'hair',
-    'ombre': 'hair',
-    'relaxer': 'hair',
-    'perm': 'hair',
-    'keratin': 'hair',
-    'deepconditioning': 'hair',
-    'silkpress': 'hair',
-    'naturalhair': 'hair',
-    'crochetbraids': 'hair',
-    'microbraids': 'hair',
-    'passion': 'hair',
-    'knotless': 'hair',
-    'goddessbraids': 'hair',
-    'feedinbraids': 'hair',
-    'protectivestyling': 'hair',
+      // Map specific services to general categories
+    const serviceCategories = {
+      // Makeup services
+      'softglam': 'makeup',
+      'glam': 'makeup',
+      'naturalmakeup': 'makeup',
+      'bridalmakeup': 'makeup',
+      'eveningmakeup': 'makeup',
+      'partymakeup': 'makeup',
+      'makeupapplication': 'makeup',
+      'makeupconsultation': 'makeup',
+      'makeupremoval': 'makeup',
+      'specialeffects': 'makeup',
+      'airbrush': 'makeup',
+      'lashes': 'makeup',
+      'lashlift': 'makeup',
+      'lashextensions': 'makeup',
+      'browlamination': 'makeup',
+      'browtint': 'makeup',
+      'lashtint': 'makeup',
+      'photoready': 'makeup',
+      'stagemakeup': 'makeup',
+      'halloween': 'makeup',
+      'cosplay': 'makeup',
+      'contour': 'makeup',
+      
+      // Hair services
+      'hair': 'hair',
+      'braids': 'hair',
+      'haircut': 'hair',
+      'coloring': 'hair',
+      'styling': 'hair',
+      'cornrows': 'hair',
+      'dreadlocks': 'hair',
+      'weaving': 'hair',
+      'extensions': 'hair',
+      'blowdry': 'hair',
+      'trim': 'hair',
+      'boxbraids': 'hair',
+      'twistbraids': 'hair',
+      'senegalese': 'hair',
+      'fulseweave': 'hair',
+      'closure': 'hair',
+      'frontal': 'hair',
+      'highlights': 'hair',
+      'balayage': 'hair',
+      'ombre': 'hair',
+      'relaxer': 'hair',
+      'perm': 'hair',
+      'keratin': 'hair',
+      'deepconditioning': 'hair',
+      'silkpress': 'hair',
+      'naturalhair': 'hair',
+      'crochetbraids': 'hair',
+      'microbraids': 'hair',
+      'passion': 'hair',
+      'knotless': 'hair',
+      'goddessbraids': 'hair',
+      'feedinbraids': 'hair',
+      'protectivestyling': 'hair',
+      'haircutting': 'hair',
+      'haircoloring': 'hair',
+      'hairstyling': 'hair',
+      'hairtreatment': 'hair',
+      'haircare': 'hair',
+      'hairwash': 'hair',
+      'hairblowdry': 'hair',
+      'hairtrim': 'hair',
     
     // Nail services
+    'nails': 'nails',
+    'nail': 'nails',
     'manicure': 'nails',
     'pedicure': 'nails',
     'nailart': 'nails',
@@ -214,8 +249,23 @@ function assignRandomStaff(service) {
     'nailtreatment': 'nails',
     'handcare': 'nails',
     'footcare': 'nails',
+    'nailcare': 'nails',
+    'nailservice': 'nails',
+    'nailservices': 'nails',
+    'nailartdesign': 'nails',
+    'nailartwork': 'nails',
+    'naildesigns': 'nails',
+    'nailpolishing': 'nails',
+    'nailfilling': 'nails',
+    'nailrepairing': 'nails',
+    'nailsoaking': 'nails',
+    'nailtreating': 'nails',
+    'handcaring': 'nails',
+    'footcaring': 'nails',
+    'nailcaring': 'nails',
     
     // Spa services
+    'spa': 'spa',
     'massage': 'spa',
     'bodymassage': 'spa',
     'fullbodymassage': 'spa',
@@ -224,6 +274,26 @@ function assignRandomStaff(service) {
     'facemask': 'spa',
     'bodywrap': 'spa',
     'bodyscrub': 'spa',
+    'spatreatment': 'spa',
+    'spatreatments': 'spa',
+    'spaservice': 'spa',
+    'spaservices': 'spa',
+    'spacare': 'spa',
+    'spatherapy': 'spa',
+    'spatherapies': 'spa',
+    'spamassage': 'spa',
+    'spafacial': 'spa',
+    'spabody': 'spa',
+    'spatreatment': 'spa',
+    'spatreatments': 'spa',
+    'spaservice': 'spa',
+    'spaservices': 'spa',
+    'spacare': 'spa',
+    'spatherapy': 'spa',
+    'spatherapies': 'spa',
+    'spamassage': 'spa',
+    'spafacial': 'spa',
+    'spabody': 'spa',
     'deepcleansing': 'spa',
     'hotstone': 'spa',
     'aromatherapy': 'spa',
@@ -250,6 +320,16 @@ function assignRandomStaff(service) {
     
     // Makeup services
     'makeup': 'makeup',
+    'beauty': 'makeup',
+    'cosmetic': 'makeup',
+    'cosmetics': 'makeup',
+    'beautymakeup': 'makeup',
+    'beautymakeupapplication': 'makeup',
+    'beautymakeupconsultation': 'makeup',
+    'beautymakeupremoval': 'makeup',
+    'beautymakeuptreatment': 'makeup',
+    'beautymakeupservice': 'makeup',
+    'beautymakeupservices': 'makeup',
     'makeupapplication': 'makeup',
     'bridalmakeup': 'makeup',
     'makeupconsultation': 'makeup',
@@ -273,6 +353,7 @@ function assignRandomStaff(service) {
     'contour': 'makeup',
     
     // Barber services
+    'barber': 'barber',
     'fade': 'barber',
     'beardtrim': 'barber',
     'lineup': 'barber',
@@ -297,15 +378,48 @@ function assignRandomStaff(service) {
     'edgeup': 'barber',
     'pompadour': 'barber',
     'texturecut': 'barber',
+    'barberservice': 'barber',
+    'barberservices': 'barber',
+    'barbercut': 'barber',
+    'barbercuts': 'barber',
+    'barbertrim': 'barber',
+    'barbertrims': 'barber',
+    'barbershave': 'barber',
+    'barbershaves': 'barber',
+    'barberfade': 'barber',
+    'barberfades': 'barber',
+    'barberlineup': 'barber',
+    'barberlineups': 'barber',
+    'barberdesign': 'barber',
+    'barberdesigns': 'barber',
+    'barberstyle': 'barber',
+    'barberstyles': 'barber',
+    'barbercutting': 'barber',
+    'barbertrimming': 'barber',
+    'barbershaving': 'barber',
+    'barberfading': 'barber',
+    'barberlining': 'barber',
+    'barberdesigning': 'barber',
+    'barberstyling': 'barber',
     
     // Waxing services
     'wax': 'waxing',
+    'waxing': 'waxing',
     'legwax': 'waxing',
     'armwax': 'waxing',
     'facialwax': 'waxing',
     'bodywax': 'waxing',
     'bikini': 'waxing',
     'brazilian': 'waxing',
+    'manzilian': 'waxing',
+    'manscaping': 'waxing',
+    'malebrazilian': 'waxing',
+    'malebrazilianwax': 'waxing',
+    'malebrazilianwaxing': 'waxing',
+    'malebodywax': 'waxing',
+    'malebodywaxing': 'waxing',
+    'malewax': 'waxing',
+    'malewaxing': 'waxing',
     'eyebrow': 'waxing',
     'eyebrows': 'waxing',
     'eyebrowwax': 'waxing',
@@ -323,9 +437,41 @@ function assignRandomStaff(service) {
     'hotwax': 'waxing',
     'sugarwax': 'waxing',
     'threading': 'waxing',
+    'leg': 'waxing',
+    'arm': 'waxing',
+    'chest': 'waxing',
+    'back': 'waxing',
+    'stomach': 'waxing',
+    'abdomen': 'waxing',
+    'belly': 'waxing',
+    'stomachwax': 'waxing',
+    'abdomenwax': 'waxing',
+    'bellywax': 'waxing',
+    'chesthair': 'waxing',
+    'backhair': 'waxing',
+    'stomachhair': 'waxing',
+    'abdomenhair': 'waxing',
+    'bellyhair': 'waxing',
+    'bodyhair': 'waxing',
+    'bodyhairremoval': 'waxing',
+    'hairremoval': 'waxing',
+    'unwantedhair': 'waxing',
+    'hairremovalwax': 'waxing',
+    'waxingremoval': 'waxing',
+    'hairwaxing': 'waxing',
+    'bodywaxing': 'waxing',
+    'facialwaxing': 'waxing',
+    'legwaxing': 'waxing',
+    'armwaxing': 'waxing',
+    'chestwaxing': 'waxing',
+    'backwaxing': 'waxing',
+    'stomachwaxing': 'waxing',
+    'abdomenwaxing': 'waxing',
+    'bellywaxing': 'waxing',
     
     // Piercing services
     'piercing': 'piercing',
+    'pierce': 'piercing',
     'earpiercing': 'piercing',
     'nosepiercing': 'piercing',
     'navelpiercing': 'piercing',
@@ -353,6 +499,28 @@ function assignRandomStaff(service) {
     'bridge': 'piercing',
     'dermal': 'piercing',
     'surface': 'piercing',
+    'piercingservice': 'piercing',
+    'piercingservices': 'piercing',
+    'piercingjewelry': 'piercing',
+    'piercingjewelries': 'piercing',
+    'piercingring': 'piercing',
+    'piercingrings': 'piercing',
+    'piercingstud': 'piercing',
+    'piercingstuds': 'piercing',
+    'piercingbarbell': 'piercing',
+    'piercingbarbells': 'piercing',
+    'piercinghoop': 'piercing',
+    'piercinghoops': 'piercing',
+    'piercingjewelry': 'piercing',
+    'piercingjewelries': 'piercing',
+    'piercingring': 'piercing',
+    'piercingrings': 'piercing',
+    'piercingstud': 'piercing',
+    'piercingstuds': 'piercing',
+    'piercingbarbell': 'piercing',
+    'piercingbarbells': 'piercing',
+    'piercinghoop': 'piercing',
+    'piercinghoops': 'piercing',
     
     // Tattoo services
     'tattoo': 'tattoo',
@@ -374,6 +542,37 @@ function assignRandomStaff(service) {
     'portraittattoo': 'tattoo',
     'lettering': 'tattoo',
     'scripttattoo': 'tattoo',
+    'tattooservice': 'tattoo',
+    'tattooservices': 'tattoo',
+    'tattooart': 'tattoo',
+    'tattooartist': 'tattoo',
+    'tattooartists': 'tattoo',
+    'tattooshop': 'tattoo',
+    'tattooshops': 'tattoo',
+    'tattoostudio': 'tattoo',
+    'tattoostudios': 'tattoo',
+    'tattooparlor': 'tattoo',
+    'tattooparlors': 'tattoo',
+    'tattoodesign': 'tattoo',
+    'tattoodesigns': 'tattoo',
+    'tattooremoval': 'tattoo',
+    'tattooremovals': 'tattoo',
+    'tattoocoverup': 'tattoo',
+    'tattoocoverups': 'tattoo',
+    'tattoosmall': 'tattoo',
+    'tattoolarge': 'tattoo',
+    'tattooblackwork': 'tattoo',
+    'tattoocolor': 'tattoo',
+    'tattootraditional': 'tattoo',
+    'tattoojapanese': 'tattoo',
+    'tattootribal': 'tattoo',
+    'tattoorealism': 'tattoo',
+    'tattoowatercolor': 'tattoo',
+    'tattoominimalist': 'tattoo',
+    'tattoogeometric': 'tattoo',
+    'tattooportrait': 'tattoo',
+    'tattoolettering': 'tattoo',
+    'tattooscript': 'tattoo',
     'floraltattoo': 'tattoo',
     'mandala': 'tattoo',
     'sacredgeometry': 'tattoo',
@@ -409,6 +608,7 @@ function assignRandomStaff(service) {
   });
   
   const eligible = staffData.filter(staff => {
+    // Normalize specialties by removing spaces and converting to lowercase
     const specialties = staff.specialties.split(',').map(s => s.trim().toLowerCase().replace(/\s+/g, ''));
     console.log(`Checking staff ${staff.name} with specialties:`, specialties);
     
@@ -423,6 +623,16 @@ function assignRandomStaff(service) {
       if (specialty.endsWith('s') && serviceToMatch.startsWith(specialty.slice(0, -1))) return true;
       if (serviceToMatch.endsWith('s') && specialty.startsWith(serviceToMatch.slice(0, -1))) return true;
       
+      // Additional matching for common variations
+      if (specialty === 'makeup' && (serviceToMatch === 'makeup' || serviceToMatch.includes('glam'))) return true;
+      if (specialty === 'hair' && serviceToMatch === 'hair') return true;
+      if (specialty === 'nails' && serviceToMatch === 'nails') return true;
+      if (specialty === 'spa' && serviceToMatch === 'spa') return true;
+      if (specialty === 'waxing' && serviceToMatch === 'waxing') return true;
+      if (specialty === 'piercing' && serviceToMatch === 'piercing') return true;
+      if (specialty === 'tattoo' && serviceToMatch === 'tattoo') return true;
+      if (specialty === 'barber' && serviceToMatch === 'barber') return true;
+      
       return false;
     });
     console.log(`${staff.name} eligible:`, isEligible);
@@ -431,11 +641,67 @@ function assignRandomStaff(service) {
   
   console.log('Eligible staff:', eligible.map(staff => staff.name));
   
-  if (eligible.length === 0) return null;
+  if (eligible.length === 0) {
+    // Fallback: try to find any staff that might be suitable based on the category
+    console.log('No exact match found, trying fallback assignment...');
+    
+    // Try to find staff based on the service category
+    const categoryMappings = {
+      'makeup': ['makeup', 'glam', 'beauty'],
+      'hair': ['hair', 'styling', 'cutting'],
+      'nails': ['nails', 'manicure', 'pedicure'],
+      'spa': ['spa', 'massage', 'facial', 'body'],
+      'waxing': ['waxing', 'wax', 'hair removal'],
+      'piercing': ['piercing', 'pierce'],
+      'tattoo': ['tattoo', 'ink'],
+      'barber': ['barber', 'cut', 'trim', 'shave']
+    };
+    
+    // Find the category for this service
+    let serviceCategory = null;
+    for (const [category, keywords] of Object.entries(categoryMappings)) {
+      if (keywords.some(keyword => 
+        normalizedService.includes(keyword) || 
+        serviceToMatch.includes(keyword) ||
+        service.toLowerCase().includes(keyword)
+      )) {
+        serviceCategory = category;
+        break;
+      }
+    }
+    
+    console.log('Detected service category:', serviceCategory);
+    
+    if (serviceCategory) {
+      // Find staff with this category
+      const categoryStaff = staffData.filter(staff => 
+        staff.specialties.toLowerCase().includes(serviceCategory)
+      );
+      
+      if (categoryStaff.length > 0) {
+        console.log(`Found ${serviceCategory} staff via fallback:`, categoryStaff.map(s => s.name));
+        return categoryStaff[Math.floor(Math.random() * categoryStaff.length)].name;
+      }
+    }
+    
+    // Last resort: find any staff that might be suitable
+    const allStaff = staffData.filter(staff => 
+      staff.specialties.toLowerCase().includes(serviceToMatch) ||
+      staff.specialties.toLowerCase().includes(normalizedService) ||
+      staff.specialties.toLowerCase().includes(service.toLowerCase())
+    );
+    
+    if (allStaff.length > 0) {
+      console.log('Found staff via last resort fallback:', allStaff.map(s => s.name));
+      return allStaff[Math.floor(Math.random() * allStaff.length)].name;
+    }
+    
+    console.log('No staff found even with fallback');
+    return null;
+  }
+  
   return eligible[Math.floor(Math.random() * eligible.length)].name;
-
-}
-// POST /api/bookings
+}// POST /api/bookings
 exports.createBooking = async (req, res) => {
   try {
     console.log('Received booking request:', req.body);
@@ -453,10 +719,6 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: 'Please login to make a booking' });
     }
     
-    if (!category) {
-      return res.status(400).json({ message: 'Category is required' });
-    }
-
     // Convert string userId to ObjectId if it's a string
     let userObjectId;
     try {
@@ -473,8 +735,8 @@ exports.createBooking = async (req, res) => {
     if (!staff) return res.status(400).json({ message: 'No staff available for this service.' });
     
     const price = getServicePrice(service) || 1000; // Default price if not found
-
-
+    const serviceCategory = category || 'general';
+    
     const bookingData = { 
       fullName, 
       phone, 
@@ -482,8 +744,7 @@ exports.createBooking = async (req, res) => {
       staff, 
       dateTime: new Date(dateTime),
       price,
-
-      category,
+      category: serviceCategory,
       userId: userObjectId
     };
     
@@ -507,8 +768,7 @@ exports.createBooking = async (req, res) => {
 exports.getCartBookings = async (req, res) => {
   try {
     const { userId } = req.query;
-
-    const bookings = await BookingModel.find({ userId, status: 'pending' });
+    const bookings = await Booking.find({ userId, status: 'pending' });
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching cart bookings', error: err.message });
@@ -531,13 +791,44 @@ exports.deleteBooking = async (req, res) => {
   }
 };
 
+// Get cart bookings for a user
+exports.getCartBookings = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const bookings = await BookingModel.find({ userId, status: 'pending' });
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching cart bookings', error: err.message });
+  }
+};
 
-
-
-
-
-
-
-
-
-
+// Get order history for a user (all non-pending bookings)
+exports.getOrderHistory = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+    
+    // Convert string userId to ObjectId
+    const mongoose = require('mongoose');
+    let userObjectId;
+    try {
+      userObjectId = new mongoose.Types.ObjectId(userId);
+    } catch (error) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    
+    // Get all bookings except pending ones (paid, confirmed, completed, cancelled)
+    const orderHistory = await BookingModel.find({ 
+      userId: userObjectId, 
+      status: { $ne: 'pending' } 
+    }).sort({ createdAt: -1 }); // Sort by newest first
+    
+    res.json(orderHistory);
+  } catch (err) {
+    console.error('Error fetching order history:', err);
+    res.status(500).json({ message: 'Error fetching order history', error: err.message });
+  }
+}; 

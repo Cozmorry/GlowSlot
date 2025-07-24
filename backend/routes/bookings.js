@@ -11,6 +11,9 @@ router.post('/cart', bookingController.addToCart);
 // Get cart bookings for a user
 router.get('/cart', bookingController.getCartBookings);
 
+// Get order history for a user
+router.get('/history', bookingController.getOrderHistory);
+
 // Update booking status
 router.post('/updateStatus', bookingController.updateBookingStatus);
 
