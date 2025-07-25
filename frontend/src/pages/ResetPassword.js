@@ -89,7 +89,7 @@ const ResetPassword = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #ffe4ec 0%, #fff 100%)',
+        background: 'linear-gradient(135deg, #f5c6ea 0%, #e91e63 100%)',
         padding: '20px',
       }}>
         <div style={{
@@ -156,7 +156,7 @@ const ResetPassword = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #ffe4ec 0%, #fff 100%)',
+        background: 'linear-gradient(135deg, #f5c6ea 0%, #e91e63 100%)',
         padding: '20px',
       }}>
         <div style={{
@@ -207,7 +207,7 @@ const ResetPassword = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #ffe4ec 0%, #fff 100%)',
+      background: 'linear-gradient(135deg, #f5c6ea 0%, #e91e63 100%)',
       padding: '20px',
     }}>
       <div style={{

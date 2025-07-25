@@ -35,7 +35,7 @@ import Reviews from './pages/Reviews';
 function App() {
   const [loading, setLoading] = React.useState(true);
   React.useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500);
+    const timer = setTimeout(() => setLoading(false), 6000);
     return () => clearTimeout(timer);
   }, []);
 

@@ -104,7 +104,7 @@ const MainLayout = ({ children }) => {
     <div style={{
       minHeight: '100vh',
       width: '100%',
-      background: isMobile ? theme.background : '#f5c6ea',
+      background: isMobile ? theme.background : 'linear-gradient(135deg, #f5c6ea 0%, #e91e63 100%)',
       display: 'flex',
       justifyContent: isMobile ? 'center' : 'flex-start',
       alignItems: 'flex-start',
