@@ -28,6 +28,7 @@ import Tattoo from './pages/Tattoo';
 import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
 import Reviews from './pages/Reviews';
 
@@ -94,8 +95,9 @@ function App() {
           <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />{/* Standalone Routes */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/reviews" element={<Reviews />} />
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>

@@ -5,7 +5,7 @@ const admin = require('../config/firebase');
 const { validationResult } = require('express-validator');
 const transporter = require('../config/mailer');
 
-const APP_BASE_URL = process.env.APP_BASE_URL || 'http://localhost:5000';
+const APP_BASE_URL = process.env.APP_BASE_URL || 'http://localhost:3000';
 
 const signup = async (req, res) => {
   const errors = validationResult(req);
@@ -165,7 +165,7 @@ const signup = async (req, res) => {
             
             <div class="footer">
               <p>If you didn't create an account with GlowSlot, you can safely ignore this email.</p>
-              <p>© 2024 GlowSlot. All rights reserved.</p>
+              <p>© 2025 GlowSlot. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -419,7 +419,7 @@ const forgotPassword = async (req, res) => {
             
             <div class="footer">
               <p>If you didn't request a password reset, you can safely ignore this email.</p>
-              <p>© 2024 GlowSlot. All rights reserved.</p>
+              <p>© 2025 GlowSlot. All rights reserved.</p>
             </div>
           </div>
         </body>
