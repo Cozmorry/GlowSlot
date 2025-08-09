@@ -3,6 +3,104 @@ const { getServicePrice } = require('../data/servicePrices');
 const User = require('../models/User');
 const { staffData } = require('../data/staffData');
 
+// Helper: determine primary service category from free-text service
+function getServiceCategory(service) {
+  const keywordsByCategory = {
+    hair: ['hair', 'braid', 'loc', 'wig', 'cut', 'dye', 'style', 'perm', 'weave', 'trim', 'blowdry'],
+    nails: ['nail', 'manicure', 'pedicure', 'polish', 'gel', 'acrylic'],
+    spa: ['massage', 'facial', 'scrub', 'body', 'therapy', 'treat', 'stone', 'hydra', 'microderm', 'peel'],
+    waxing: ['wax', 'thread', 'hair removal', 'eyebrow', 'brazilian', 'underarm'],
+    makeup: ['makeup', 'lash', 'brow', 'face', 'glam', 'contour', 'airbrush'],
+    barber: ['beard', 'shave', 'trim', 'fade', 'cut', 'lineup'],
+    piercing: ['pierce', 'earring', 'nose', 'navel', 'belly', 'septum'],
+    tattoo: ['tattoo', 'ink', 'design', 'sleeve'],
+  };
+
+  const lower = (service || '').toLowerCase();
+  for (const [category, words] of Object.entries(keywordsByCategory)) {
+    if (words.some(w => lower.includes(w))) return category;
+  }
+  return null;
+}
+
+// Helper: get eligible staff (basic match by category keywords)
+function getEligibleStaff(service) {
+  const category = getServiceCategory(service);
+  if (!category) return [];
+  return staffData.filter(s => (s.specialties || '').toLowerCase().includes(category));
+}
+
+// Helper: generate time slots for a given date (local timezone) every 30 minutes
+function generateSlotsForDate(dateStr, slotMinutes = 30, startHour = 9, endHour = 18) {
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return [];
+  const slots = [];
+  const start = new Date(date);
+  start.setHours(startHour, 0, 0, 0);
+  const end = new Date(date);
+  end.setHours(endHour, 0, 0, 0);
+  for (let t = new Date(start); t < end; t = new Date(t.getTime() + slotMinutes * 60000)) {
+    slots.push(new Date(t));
+  }
+  return slots;
+}
+
+// GET /api/bookings/availability?service=...&date=YYYY-MM-DD
+exports.getAvailability = async (req, res) => {
+  try {
+    const { service, date, durationMinutes } = req.query;
+    if (!service) return res.status(400).json({ message: 'Service is required' });
+    if (!date) return res.status(400).json({ message: 'Date (YYYY-MM-DD) is required' });
+
+    const eligible = getEligibleStaff(service);
+    if (eligible.length === 0) {
+      return res.json({ service, date, durationMinutes: Number(durationMinutes) || 60, staff: [] });
+    }
+
+    const slotLen = Number(durationMinutes) || 60; // minutes
+    const allSlots = generateSlotsForDate(date, 30);
+
+    // Compute day bounds
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+
+    // Find existing bookings for eligible staff on that date
+    const staffNames = eligible.map(s => s.name);
+    const existing = await BookingModel.find({
+      staff: { $in: staffNames },
+      dateTime: { $gte: dayStart, $lt: dayEnd },
+    }).select('staff dateTime');
+
+    const bookingsByStaff = new Map();
+    for (const s of staffNames) bookingsByStaff.set(s, []);
+    for (const b of existing) {
+      bookingsByStaff.get(b.staff)?.push(new Date(b.dateTime));
+    }
+
+    // For each staff, filter out slots that collide with existing bookings (assume booking occupies slotLen)
+    const result = eligible.map(s => {
+      const taken = bookingsByStaff.get(s.name) || [];
+      const availableSlots = allSlots.filter(slot => {
+        // Check collision with any taken slot (within duration)
+        return !taken.some(t => Math.abs(slot.getTime() - t.getTime()) < slotLen * 60000);
+      });
+      return {
+        name: s.name,
+        avatar: s.avatar || null,
+        specialties: s.specialties || '',
+        slots: availableSlots.map(d => d.toISOString()),
+      };
+    });
+
+    res.json({ service, date, durationMinutes: slotLen, staff: result });
+  } catch (err) {
+    console.error('Error fetching availability:', err);
+    res.status(500).json({ message: 'Error fetching availability' });
+  }
+};
+
 exports.addToCart = async (req, res) => {
   try {
     const { service, fullName, phone, dateTime, userId } = req.body;
@@ -705,7 +803,7 @@ function assignRandomStaff(service) {
 exports.createBooking = async (req, res) => {
   try {
     console.log('Received booking request:', req.body);
-    const { fullName, phone, service, dateTime, userId, category } = req.body;
+    const { fullName, phone, service, dateTime, userId, category, staff: requestedStaff } = req.body;
     
     if (!service) {
       return res.status(400).json({ message: 'Service is required' });
@@ -728,11 +826,28 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: 'Invalid user ID format' });
     }
     
-    console.log('Looking for staff with service:', service);
-    const staff = assignRandomStaff(service);
-    console.log('Assigned staff:', staff);
-    
-    if (!staff) return res.status(400).json({ message: 'No staff available for this service.' });
+    let staff = requestedStaff;
+    if (staff) {
+      // Validate requested staff is eligible and not double-booked at that time
+      const eligible = getEligibleStaff(service).map(s => s.name);
+      if (!eligible.includes(staff)) {
+        return res.status(400).json({ message: 'Selected staff is not available for this service.' });
+      }
+      // Check for booking conflict (assume 60 min window)
+      const desired = new Date(dateTime);
+      const conflict = await BookingModel.findOne({
+        staff,
+        dateTime: desired,
+      });
+      if (conflict) {
+        return res.status(409).json({ message: 'Selected time is no longer available. Please pick another slot.' });
+      }
+    } else {
+      console.log('Looking for staff with service:', service);
+      staff = assignRandomStaff(service);
+      console.log('Assigned staff (auto):', staff);
+      if (!staff) return res.status(400).json({ message: 'No staff available for this service.' });
+    }
     
     const price = getServicePrice(service) || 1000; // Default price if not found
     const serviceCategory = category || 'general';

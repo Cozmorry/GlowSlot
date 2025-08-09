@@ -375,14 +375,14 @@ const Home = forwardRef((props, ref) => {
                     textShadow: '2px 2px 8px #000',
                     padding: '8px 16px',
                     borderRadius: 12,
-                    background: 'linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 100%)',
+                    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0,0,0,0.4) 100%)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     maxWidth: '90%',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(3, 3, 3, 0.94)',
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%)';

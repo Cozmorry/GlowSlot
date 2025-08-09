@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const bookingController = require('../controllers/bookingController');
 
+// Availability lookup
+router.get('/availability', bookingController.getAvailability);
+
 // Create a booking
 router.post('/', bookingController.createBooking);
 
