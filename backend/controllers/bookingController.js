@@ -2,6 +2,7 @@ const BookingModel = require('../models/Booking');
 const { getServicePrice } = require('../data/servicePrices');
 const User = require('../models/User');
 const { staffData } = require('../data/staffData');
+const transporter = require('../config/mailer');
 
 // Helper: determine primary service category from free-text service
 function getServiceCategory(service) {
@@ -868,6 +869,16 @@ exports.createBooking = async (req, res) => {
     await booking.save();
     
     console.log('Booking created successfully:', booking);
+    // Send confirmation email and schedule reminder
+    try {
+      const dbUser = await User.findById(userObjectId).lean();
+      if (dbUser && dbUser.email) {
+        await sendBookingConfirmationEmail(dbUser, booking);
+        scheduleBookingReminderEmail(dbUser, booking);
+      }
+    } catch (mailErr) {
+      console.error('Email dispatch error (booking):', mailErr.message);
+    }
     res.status(201).json({
       booking,
       message: 'Booking successful! You can view your booking in the cart.',
@@ -878,6 +889,97 @@ exports.createBooking = async (req, res) => {
     res.status(500).json({ message: 'Error creating booking', error: err.message });
   }
 };
+
+// Send immediate confirmation email
+async function sendBookingConfirmationEmail(user, booking) {
+  const when = new Date(booking.dateTime);
+  const prettyWhen = when.toLocaleString();
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Booking Confirmed - GlowSlot</title>
+      <style>
+        body{font-family:Segoe UI,Tahoma,Verdana,sans-serif;line-height:1.6;color:#333;background:#f8f9fa;padding:20px}
+        .container{max-width:640px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.06);padding:28px}
+        .logo{font-size:24px;font-weight:800;color:#e91e63;margin-bottom:10px}
+        .title{font-size:20px;font-weight:700;color:#2d3748;margin:10px 0}
+        .pill{display:inline-block;background:#e91e63;color:#fff;border-radius:999px;padding:6px 12px;font-weight:600}
+        .meta{margin:14px 0}
+        .meta div{margin:6px 0}
+        .footer{margin-top:24px;color:#718096;font-size:13px}
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">✨ GlowSlot</div>
+        <div class="title">Your booking is confirmed</div>
+        <p>Hi ${user.name || 'there'},</p>
+        <p>Thanks for booking with GlowSlot. Here are your appointment details:</p>
+        <div class="meta">
+          <div><strong>Service:</strong> ${booking.service}</div>
+          <div><strong>Staff:</strong> ${booking.staff}</div>
+          <div><strong>Date & Time:</strong> ${prettyWhen}</div>
+          <div><strong>Price:</strong> KSH ${booking.price}</div>
+          <div><span class="pill">Status: ${booking.status || 'pending'}</span></div>
+        </div>
+        <p>You will receive a reminder before your appointment.</p>
+        <div class="footer">© 2025 GlowSlot. All rights reserved.</div>
+      </div>
+    </body>
+    </html>`;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: user.email,
+    subject: 'GlowSlot - Booking confirmed',
+    html,
+  });
+}
+
+// Schedule reminder email ~2 hours before the appointment (in-memory timer)
+function scheduleBookingReminderEmail(user, booking, leadMs = 2 * 60 * 60 * 1000) {
+  const when = new Date(booking.dateTime).getTime();
+  const now = Date.now();
+  const delay = when - now - leadMs;
+  // Only schedule if delay is in the future and less than 30 days
+  if (delay > 0 && delay < 30 * 24 * 60 * 60 * 1000) {
+    setTimeout(async () => {
+      try {
+        const html = `
+          <!DOCTYPE html>
+          <html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Appointment Reminder - GlowSlot</title>
+          <style>body{font-family:Segoe UI,Tahoma,Verdana,sans-serif;line-height:1.6;color:#333;background:#f8f9fa;padding:20px}.container{max-width:640px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.06);padding:28px}.logo{font-size:24px;font-weight:800;color:#e91e63;margin-bottom:10px}.title{font-size:20px;font-weight:700;color:#2d3748;margin:10px 0}.meta div{margin:6px 0}.footer{margin-top:24px;color:#718096;font-size:13px}</style>
+          </head><body>
+          <div class="container">
+            <div class="logo">✨ GlowSlot</div>
+            <div class="title">Appointment Reminder</div>
+            <p>Hi ${user.name || 'there'}, this is a friendly reminder for your upcoming appointment:</p>
+            <div class="meta">
+              <div><strong>Service:</strong> ${booking.service}</div>
+              <div><strong>Staff:</strong> ${booking.staff}</div>
+              <div><strong>Date & Time:</strong> ${new Date(booking.dateTime).toLocaleString()}</div>
+            </div>
+            <p>Please arrive a few minutes early. We look forward to seeing you!</p>
+            <div class="footer">© 2025 GlowSlot. All rights reserved.</div>
+          </div>
+          </body></html>`;
+
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: user.email,
+          subject: 'GlowSlot - Appointment reminder',
+          html,
+        });
+      } catch (e) {
+        console.error('Reminder email error:', e.message);
+      }
+    }, delay);
+  }
+}
 
 // GET /api/bookings/cart?userId=...
 exports.getCartBookings = async (req, res) => {
