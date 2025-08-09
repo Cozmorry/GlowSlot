@@ -177,6 +177,12 @@ exports.updateBookingStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid user ID format' });
     }
 
+    // Find all pending bookings for this user (to email after update)
+    const bookingsToUpdate = await BookingModel.find({
+      userId: userObjectId,
+      status: 'pending'
+    });
+
     // Update all pending bookings for this user
     const result = await BookingModel.updateMany(
       { 
@@ -193,6 +199,26 @@ exports.updateBookingStatus = async (req, res) => {
 
     if (result.matchedCount === 0) {
       return res.status(404).json({ message: 'No pending bookings found for this user' });
+    }
+
+    // Send emails based on new status
+    try {
+      const dbUser = await User.findById(userObjectId).lean();
+      if (dbUser && dbUser.email && bookingsToUpdate.length > 0) {
+        for (const b of bookingsToUpdate) {
+          const base = b.toObject();
+          const effectiveDate = status === 'confirmed' ? new Date() : (base.dateTime ? new Date(base.dateTime) : new Date());
+          const updatedBooking = { ...base, status, dateTime: effectiveDate };
+          if (status === 'confirmed') {
+            await sendBookingConfirmationEmail(dbUser, updatedBooking);
+            scheduleBookingReminderEmail(dbUser, updatedBooking);
+          } else if (status === 'completed') {
+            await sendBookingCompletionEmail(dbUser, updatedBooking);
+          }
+        }
+      }
+    } catch (mailErr) {
+      console.error('Status email dispatch error:', mailErr.message);
     }
 
     res.status(200).json({ 
@@ -979,6 +1005,48 @@ function scheduleBookingReminderEmail(user, booking, leadMs = 2 * 60 * 60 * 1000
       }
     }, delay);
   }
+}
+
+// Send completion/thank-you email
+async function sendBookingCompletionEmail(user, booking) {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Thank You - GlowSlot</title>
+      <style>
+        body{font-family:Segoe UI,Tahoma,Verdana,sans-serif;line-height:1.6;color:#333;background:#f8f9fa;padding:20px}
+        .container{max-width:640px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.06);padding:28px}
+        .logo{font-size:24px;font-weight:800;color:#e91e63;margin-bottom:10px}
+        .title{font-size:20px;font-weight:700;color:#2d3748;margin:10px 0}
+        .meta div{margin:6px 0}
+        .footer{margin-top:24px;color:#718096;font-size:13px}
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">✨ GlowSlot</div>
+        <div class="title">Thanks for visiting!</div>
+        <p>Hi ${user.name || 'there'},</p>
+        <p>Your ${booking.service} appointment with ${booking.staff} is now marked as <strong>completed</strong>. We hope you enjoyed the service!</p>
+        <div class="meta">
+          <div><strong>Date & Time:</strong> ${new Date(booking.dateTime).toLocaleString()}</div>
+          <div><strong>Service:</strong> ${booking.service}</div>
+        </div>
+        <p>We’d love your feedback — please leave a review on the Reviews page to help others.</p>
+        <div class="footer">© 2025 GlowSlot. All rights reserved.</div>
+      </div>
+    </body>
+    </html>`;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: user.email,
+    subject: 'GlowSlot - Thank you for your visit',
+    html,
+  });
 }
 
 // GET /api/bookings/cart?userId=...

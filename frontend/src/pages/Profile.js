@@ -2,7 +2,8 @@ import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaUser, FaPhone, FaEnvelope, FaSignOutAlt, FaBookOpen, FaUsers, FaCog, FaInfoCircle, FaQuestionCircle, FaEdit } from 'react-icons/fa';
+import { FaUser, FaPhone, FaEnvelope, FaSignOutAlt, FaBookOpen, FaUsers, FaCog, FaInfoCircle, FaQuestionCircle, FaEdit, FaLifeRing } from 'react-icons/fa';
+import Modal from '../components/Modal';
 const navItems = [
   { label: 'Book with us', route: '/home', icon: FaBookOpen },
   { label: 'Staff', route: '/staff', icon: FaUsers },
@@ -19,6 +20,7 @@ const Profile = () => {
   const [isDesktop, setIsDesktop] = React.useState(isDesktopWidth());
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
+  const [helpOpen, setHelpOpen] = React.useState(false);
 
   React.useEffect(() => {
     // Check for user data
@@ -234,6 +236,42 @@ const Profile = () => {
               <FaSignOutAlt size={16} />
               Logout
             </button>
+              <button
+                onClick={() => setHelpOpen(true)}
+                style={{
+                  padding: '10px 20px',
+                  background: mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(255, 255, 255, 0.9)',
+                  color: theme.text,
+                  border: mode === 'dark' 
+                    ? '1px solid rgba(233, 30, 99, 0.5)' 
+                    : '1px solid rgba(233, 30, 99, 0.3)',
+                  borderRadius: 16,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.2)' 
+                    : 'rgba(255, 255, 255, 1)';
+                  e.target.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(255, 255, 255, 0.9)';
+                  e.target.style.transform = 'translateY(0)';
+                }}
+              >
+                <FaLifeRing size={14} />
+                Help
+              </button>
             </div>
           </>
         ) : (
@@ -321,6 +359,25 @@ const Profile = () => {
           );
         })}
       </div>
+      {/* Help Modal */}
+      <Modal open={helpOpen} onClose={() => setHelpOpen(false)}>
+        <h3 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 12px 0', color: '#e91e63' }}>How to use GlowSlot</h3>
+        <div style={{ textAlign: 'left', fontSize: 14, color: mode === 'dark' ? '#e2e8f0' : '#4a5568' }}>
+          <ol style={{ paddingLeft: 18, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <li><strong>Discover services:</strong> Tap Home and pick a category (Hair, Nails, Spa, etc.).</li>
+            <li><strong>View details:</strong> Explore service cards to see pricing and ratings.</li>
+            <li><strong>Book an appointment:</strong> Hit “Book”, enter your details, select a date, pick a staff and available time slot, then confirm.</li>
+            <li><strong>Cart & history:</strong> Open Cart to view pending bookings and your order history.</li>
+            <li><strong>Manage account:</strong> Update your name, phone, or avatar in Settings.</li>
+            <li><strong>Reviews:</strong> Share feedback on services and mark helpful reviews.</li>
+            <li><strong>Auth & security:</strong> Verify email after signup; use “Forgot Password” if needed.</li>
+            <li><strong>Notifications:</strong> You’ll get confirmation and reminder emails for bookings.</li>
+          </ol>
+          <div style={{ marginTop: 12 }}>
+            Need more help? Check <span style={{ color: '#e91e63', fontWeight: 700 }}>FAQs</span> or contact support.
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
