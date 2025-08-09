@@ -7,9 +7,10 @@ const bookingSchema = new mongoose.Schema({
   fullName: { type: String },
   phone: { type: String },
   dateTime: { type: Date },
-  status: { type: String, enum: ['pending', 'confirmed', 'completed', 'cancelled'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'paid', 'confirmed', 'completed', 'cancelled'], default: 'pending' },
   category: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  paidAmount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });
 

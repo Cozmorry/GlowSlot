@@ -3,6 +3,7 @@ const { getServicePrice } = require('../data/servicePrices');
 const User = require('../models/User');
 const { staffData } = require('../data/staffData');
 const transporter = require('../config/mailer');
+const Payment = require('../models/Payment');
 
 // Helper: determine primary service category from free-text service
 function getServiceCategory(service) {
@@ -257,7 +258,8 @@ exports.updateBookingStatus = async (req, res) => {
       { 
         $set: { 
           status: status,
-          dateTime: status === 'confirmed' ? new Date() : undefined
+          dateTime: status === 'confirmed' ? new Date() : undefined,
+          // Note: paidAmount updated per-record below to also log Payment
         } 
       }
     );
@@ -273,7 +275,28 @@ exports.updateBookingStatus = async (req, res) => {
         for (const b of bookingsToUpdate) {
           const base = b.toObject();
           const effectiveDate = status === 'confirmed' ? new Date() : (base.dateTime ? new Date(base.dateTime) : new Date());
-          const updatedBooking = { ...base, status, dateTime: effectiveDate };
+          let paidAmount = base.paidAmount || 0;
+          if (status === 'paid' && paidAmount === 0) {
+            paidAmount = Math.round((base.price / 2) * 100) / 100;
+            // persist on booking and log Payment (deposit)
+            await BookingModel.updateOne({ _id: b._id }, { $set: { paidAmount, status: 'paid' } });
+            await Payment.updateOne(
+              { bookingId: b._id, type: 'deposit' },
+              { $setOnInsert: { bookingId: b._id, userId: userObjectId, amount: paidAmount, type: 'deposit', method: 'manual' } },
+              { upsert: true }
+            );
+          }
+          if (status === 'completed' && paidAmount < base.price) {
+            const finalAmount = Math.round((base.price - paidAmount) * 100) / 100;
+            paidAmount = base.price;
+            await BookingModel.updateOne({ _id: b._id }, { $set: { paidAmount, status: 'completed' } });
+            await Payment.updateOne(
+              { bookingId: b._id, type: 'final' },
+              { $setOnInsert: { bookingId: b._id, userId: userObjectId, amount: finalAmount, type: 'final', method: 'manual' } },
+              { upsert: true }
+            );
+          }
+          const updatedBooking = { ...base, status, dateTime: effectiveDate, paidAmount };
           if (status === 'confirmed') {
             await sendBookingConfirmationEmail(dbUser, updatedBooking);
             scheduleBookingReminderEmail(dbUser, updatedBooking);

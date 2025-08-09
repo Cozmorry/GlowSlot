@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="48" viewBox="0 0 160 48" role="img" aria-label="M‑Pesa">
+  <title>M‑Pesa</title>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#1FB36B"/>
+      <stop offset="100%" stop-color="#0e8f53"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="160" height="48" rx="10" fill="#ffffff"/>
+  <g transform="translate(8,6)">
+    <rect x="0" y="0" width="36" height="36" rx="8" fill="url(#g)"/>
+    <path d="M9 26 V10 h4 l5 7 5-7 h4 v16 h-4 V17 l-5 7 -5-7 v9z" fill="#ffffff"/>
+    <g transform="translate(44,5)">
+      <text x="0" y="17" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#1FB36B">M-</text>
+      <text x="25" y="17" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#e91e63">P</text>
+      <text x="37" y="17" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#1FB36B">ESA</text>
+    </g>
+  </g>
+</svg>
+

@@ -4,6 +4,8 @@ const adminAuth = require('../middleware/adminAuth');
 const Booking = require('../models/Booking');
 const User = require('../models/User');
 const transporter = require('../config/mailer');
+const Payment = require('../models/Payment');
+const PDFDocument = require('pdfkit');
 
 // Get all appointments (except cancelled)
 router.get('/appointments', adminAuth, async (req, res) => {
@@ -43,11 +45,29 @@ router.put('/appointments/:id', adminAuth, async (req, res) => {
       return res.status(400).json({ message: 'Valid status is required' });
     }
     
-    const appointment = await Booking.findByIdAndUpdate(
-      id, 
-      { status }, 
-      { new: true }
-    );
+    let appointment = await Booking.findById(id);
+    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
+    // Update paidAmount logic
+    if (status === 'paid' && (!appointment.paidAmount || appointment.paidAmount === 0)) {
+      const deposit = Math.round((appointment.price / 2) * 100) / 100;
+      appointment.paidAmount = deposit;
+      await Payment.updateOne(
+        { bookingId: appointment._id, type: 'deposit' },
+        { $setOnInsert: { bookingId: appointment._id, userId: appointment.userId, amount: deposit, type: 'deposit', method: 'manual' } },
+        { upsert: true }
+      );
+    }
+    if (status === 'completed' && appointment.paidAmount < appointment.price) {
+      const finalAmount = Math.round((appointment.price - appointment.paidAmount) * 100) / 100;
+      appointment.paidAmount = appointment.price;
+      await Payment.updateOne(
+        { bookingId: appointment._id, type: 'final' },
+        { $setOnInsert: { bookingId: appointment._id, userId: appointment.userId, amount: finalAmount, type: 'final', method: 'manual' } },
+        { upsert: true }
+      );
+    }
+    appointment.status = status;
+    await appointment.save();
     
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
@@ -95,17 +115,16 @@ router.get('/stats', adminAuth, async (req, res) => {
     
     const totalUsers = await User.countDocuments({ role: 'customer' });
     
-    // Get revenue (sum of booking prices for completed bookings)
+    // Revenue = sum of paidAmount
     const revenueData = await Booking.aggregate([
-      { $match: { status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$price' } } }
+      { $group: { _id: null, total: { $sum: '$paidAmount' } } }
     ]);
     
     const revenue = revenueData.length > 0 ? revenueData[0].total : 0;
     
-    // Get bookings by category
+    // Get bookings by category with paid amounts
     const bookingsByCategory = await Booking.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $group: { _id: '$category', count: { $sum: 1 }, revenue: { $sum: '$paidAmount' } } },
       { $sort: { count: -1 } }
     ]);
     
@@ -139,6 +158,168 @@ router.get('/users', adminAuth, async (req, res) => {
 });
 
 module.exports = router;
+
+// Reports: export PDF for a date range
+router.get('/reports/pdf', adminAuth, async (req, res) => {
+  try {
+    const { start, end } = req.query; // YYYY-MM-DD
+    const startDate = start ? new Date(start + 'T00:00:00') : new Date('2000-01-01');
+    const endDate = end ? new Date(end + 'T23:59:59') : new Date();
+
+    // Aggregate revenue and bookings in range
+    const revenueAgg = await Payment.aggregate([
+      { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const revenue = revenueAgg[0]?.total || 0;
+
+    const bookings = await Booking.find({ createdAt: { $gte: startDate, $lte: endDate } }).sort({ createdAt: 1 });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="glowslot-report-${start || 'all'}-to-${end || 'now'}.pdf"`);
+    const doc = new PDFDocument({ margin: 36 });
+    doc.pipe(res);
+
+    // Helpers & theme
+    const brand = '#e91e63';
+    const text = '#2d3748';
+    const subText = '#4a5568';
+    const border = '#e9ecef';
+    const light = '#fce4ec';
+    const money = (n) => `KSH ${Number(n || 0).toFixed(2)}`;
+
+    const drawHeader = () => {
+      const { width } = doc.page;
+      doc.save();
+      doc.rect(0, 0, width, 60).fill(light);
+      doc.fillColor(brand).font('Helvetica-Bold').fontSize(22).text('GlowSlot Report', 36, 18);
+      doc.fillColor(subText).font('Helvetica').fontSize(10)
+        .text(`Period: ${start || 'All time'} to ${end || new Date().toISOString().slice(0,10)}`, 36, 40)
+        .text(`Generated: ${new Date().toLocaleString()}`, 300, 40);
+      doc.restore();
+      doc.moveDown(2);
+    };
+
+    const drawFooter = () => {
+      const range = doc.bufferedPageRange();
+      // Apply to current page only
+      const { width, height } = doc.page;
+      doc.save();
+      doc.moveTo(36, height - 36).lineTo(width - 36, height - 36).strokeColor(border).stroke();
+      doc.fillColor(subText).fontSize(9).text('© 2025 GlowSlot', 36, height - 30);
+      doc.fillColor(subText).fontSize(9).text(`Page ${doc.page.number} of ${range.count}`, width - 140, height - 30);
+      doc.restore();
+    };
+
+    doc.on('pageAdded', () => {
+      drawHeader();
+      drawFooter();
+    });
+
+    // First page header
+    drawHeader();
+
+    // Summary cards
+    const yStart = doc.y + 6;
+    const cardW = (doc.page.width - 36 * 2 - 16 * 2) / 3; // three columns
+    const cardH = 64;
+    const drawCard = (x, y, title, value, color = brand) => {
+      doc.save();
+      doc.roundedRect(x, y, cardW, cardH, 8).fill('#ffffff').strokeColor(border).lineWidth(1).stroke();
+      doc.fillColor(subText).font('Helvetica').fontSize(10).text(title, x + 12, y + 10);
+      doc.fillColor(color).font('Helvetica-Bold').fontSize(16).text(value, x + 12, y + 28);
+      doc.restore();
+    };
+
+    const completed = bookings.filter(b => b.status === 'completed').length;
+    const pending = bookings.filter(b => b.status === 'pending').length;
+    const paid = bookings.filter(b => b.status === 'paid').length;
+    const confirmed = bookings.filter(b => b.status === 'confirmed').length;
+
+    drawCard(36, yStart, 'Total Revenue (received)', money(revenue), '#10B981');
+    drawCard(36 + cardW + 16, yStart, 'Bookings Created', String(bookings.length), brand);
+    drawCard(36 + (cardW + 16) * 2, yStart, 'Status: C / Conf / Paid / Pend', `${completed} / ${confirmed} / ${paid} / ${pending}`, '#2196F3');
+
+    doc.moveDown(6);
+
+    // Section: Bookings table
+    doc.fillColor(text).font('Helvetica-Bold').fontSize(14).text('Bookings');
+    doc.moveDown(0.5);
+
+    // Table header
+    const startX = 36;
+    let y = doc.y;
+    const widths = [80, 150, 120, 90, 70, 70];
+    const headers = ['Date', 'Service', 'Staff', 'Status', 'Price', 'Paid'];
+
+    doc.save();
+    doc.rect(startX, y - 2, widths.reduce((a,b)=>a+b,0), 20).fill(light);
+    doc.fillColor(brand).font('Helvetica-Bold').fontSize(10);
+    let x = startX + 6;
+    headers.forEach((h, i) => {
+      doc.text(h, x, y + 2, { width: widths[i] - 12, align: 'left' });
+      x += widths[i];
+    });
+    doc.restore();
+    y += 22;
+
+    // Rows
+    doc.font('Helvetica').fontSize(10).fillColor(text);
+    bookings.forEach((b, idx) => {
+      if (y > doc.page.height - 72) {
+        drawFooter();
+        doc.addPage();
+        y = doc.y;
+        // redraw table header on new page
+        doc.save();
+        doc.rect(startX, y - 2, widths.reduce((a,b)=>a+b,0), 20).fill(light);
+        doc.fillColor(brand).font('Helvetica-Bold').fontSize(10);
+        let hx = startX + 6;
+        headers.forEach((h, i) => { doc.text(h, hx, y + 2, { width: widths[i] - 12 }); hx += widths[i]; });
+        doc.restore();
+        y += 22;
+        doc.font('Helvetica').fontSize(10).fillColor(text);
+      }
+
+      if (idx % 2 === 0) {
+        doc.save();
+        doc.rect(startX, y - 2, widths.reduce((a,b)=>a+b,0), 18).fill('#fafafa');
+        doc.restore();
+      }
+
+      let cx = startX + 6;
+      const cells = [
+        new Date(b.createdAt).toLocaleDateString(),
+        b.service || '-',
+        b.staff || '-',
+        (b.status || '-'),
+        money(b.price),
+        money(b.paidAmount)
+      ];
+      cells.forEach((val, i) => {
+        doc.fillColor(text).text(String(val), cx, y, { width: widths[i] - 12, align: i >= 4 ? 'right' : 'left' });
+        cx += widths[i];
+      });
+      y += 18;
+    });
+
+    // Totals row
+    if (y > doc.page.height - 72) { drawFooter(); doc.addPage(); y = doc.y; }
+    doc.save();
+    doc.moveTo(startX, y).lineTo(startX + widths.reduce((a,b)=>a+b,0), y).strokeColor(border).stroke();
+    doc.font('Helvetica-Bold').fillColor(text).text('Totals', startX + 6, y + 6, { width: widths[0] + widths[1] + widths[2] + widths[3] - 12 });
+    doc.text(money(bookings.reduce((a,b)=>a + (b.price || 0), 0)), startX + widths[0] + widths[1] + widths[2] + widths[3] + 6, y + 6, { width: widths[4] - 12, align: 'right' });
+    doc.text(money(bookings.reduce((a,b)=>a + (b.paidAmount || 0), 0)), startX + widths[0] + widths[1] + widths[2] + widths[3] + widths[4] + 6, y + 6, { width: widths[5] - 12, align: 'right' });
+    doc.restore();
+
+    // Footer for last page & end
+    drawFooter();
+    doc.end();
+  } catch (err) {
+    console.error('Error generating PDF:', err);
+    res.status(500).json({ message: 'Failed to generate report' });
+  }
+});
 
 // Helpers (kept local to admin route for now)
 async function sendBookingConfirmationEmail(user, booking) {

@@ -220,17 +220,17 @@ export default function MakeUp() {
               Book Now
             </button>
             
-            {selectedService && (<BookingForm
-                open={true}
-                service={selectedService.name}
-                onClose={() => setSelectedService(null)}
-                onSuccess={handleBookingSuccess}
-                category="makeup"
-              />
-            )}
           </div>
         </div>
       ))}
+      {/* Single modal instance rendered once per page */}
+      <BookingForm
+        open={!!selectedService}
+        service={selectedService?.name || ''}
+        onClose={() => setSelectedService(null)}
+        onSuccess={handleBookingSuccess}
+        category="makeup"
+      />
     </div>
   );
 } 

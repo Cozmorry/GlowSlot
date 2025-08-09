@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import Modal from '../components/Modal';
 
 export default function AdminDashboard() {
   console.log('AdminDashboard component mounting...');
@@ -1075,6 +1076,34 @@ function AppointmentsTab({ isMobile, showError }) {
 
 // Stats Tab Component
 function StatsTab({ stats, isMobile }) {
+  const { getToken } = useAuth();
+  const { showError, showSuccess } = useNotification();
+  const [reportOpen, setReportOpen] = React.useState(false);
+  const [reportStart, setReportStart] = React.useState('');
+  const [reportEnd, setReportEnd] = React.useState('');
+  const downloadReport = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (reportStart.trim()) params.append('start', reportStart.trim());
+      if (reportEnd.trim()) params.append('end', reportEnd.trim());
+      const token = getToken();
+      const url = `http://localhost:5000/api/admin/reports/pdf?${params.toString()}`;
+      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Failed to generate report');
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `glowslot-report-${reportStart || 'all'}-to-${reportEnd || 'now'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setReportOpen(false);
+      showSuccess && showSuccess('Report generated successfully');
+    } catch (e) {
+      console.error('Report download error:', e);
+      showError && showError('Failed to generate report');
+    }
+  };
   if (!stats) {
     return (
       <div style={{
@@ -1195,7 +1224,37 @@ function StatsTab({ stats, isMobile }) {
           </div>
         ))}
         </div>
+        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={() => setReportOpen(true)}
+            style={{
+              padding: '10px 16px',
+              background: '#e91e63',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontSize: 14,
+              fontWeight: 600
+            }}
+            onMouseEnter={(e) => e.target.style.background = '#c2185b'}
+            onMouseLeave={(e) => e.target.style.background = '#e91e63'}
+          >
+            Export to PDF
+          </button>
+        </div>
       </div>
+      <Modal open={reportOpen} onClose={() => setReportOpen(false)}>
+        <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 12px 0', color: '#e91e63' }}>Export Report</h3>
+        <div style={{ fontSize: 13, color: '#4a5568', marginBottom: 12 }}>
+          Select a start and/or end date. Leave blank for an all-time report.
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'stretch' }}>
+          <input type="date" value={reportStart} onChange={(e)=>setReportStart(e.target.value)} style={{ padding: 10, borderRadius: 8, border: '1px solid #e2e8f0' }} />
+          <input type="date" value={reportEnd} onChange={(e)=>setReportEnd(e.target.value)} style={{ padding: 10, borderRadius: 8, border: '1px solid #e2e8f0' }} />
+          <button onClick={downloadReport} style={{ padding: '10px 14px', borderRadius: 8, background: '#e91e63', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Download PDF</button>
+        </div>
+      </Modal>
     </div>
   );
 }

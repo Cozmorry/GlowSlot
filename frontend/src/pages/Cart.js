@@ -34,6 +34,7 @@ export default function Cart() {
   const calculateTotal = () => {
     return bookings.reduce((total, booking) => total + (booking.price || 0), 0);
   };
+  const calculateDeposit = () => Math.round((calculateTotal() / 2) * 100) / 100;
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(isDesktopWidth());
@@ -349,6 +350,9 @@ export default function Cart() {
                   }}>
                     <span>Total:</span>
                     <span style={{ color: '#FF69B4' }}>KSH {calculateTotal()}</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: '#718096' }}>
+                    Deposit (50%): KSH {calculateDeposit()} • Balance due on completion: KSH {Math.max(0, calculateTotal() - calculateDeposit())}
                   </div>
                   <button
                     onClick={() => {

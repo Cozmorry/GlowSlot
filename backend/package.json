@@ -23,6 +23,6 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^8.16.4",
     "nodemailer": "^7.0.5",
-    "proxy": "http://localhost:5000"
+    "pdfkit": "^0.13.0"
   }
 }
