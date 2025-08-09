@@ -31,17 +31,82 @@ function getEligibleStaff(service) {
   return staffData.filter(s => (s.specialties || '').toLowerCase().includes(category));
 }
 
-// Helper: generate time slots for a given date (local timezone) every 30 minutes
-function generateSlotsForDate(dateStr, slotMinutes = 30, startHour = 9, endHour = 18) {
-  const date = new Date(dateStr);
-  if (Number.isNaN(date.getTime())) return [];
+// Helper: seedable PRNG (mulberry32) for deterministic-but-natural schedules
+function mulberry32(seed) {
+  let t = seed >>> 0;
+  return function () {
+    t += 0x6D2B79F5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function stringSeed(...parts) {
+  const s = parts.join('|');
+  let h = 2166136261 >>> 0; // FNV-1a
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function randInt(prng, min, max) {
+  return Math.floor(prng() * (max - min + 1)) + min;
+}
+
+function minutes(ms) { return ms * 60000; }
+
+function isWithin(ts, start, end) {
+  const t = ts.getTime();
+  return t >= start.getTime() && t < end.getTime();
+}
+
+// More realistic per-staff schedule: variable hours, offsets, and intervals
+function generateRealisticSlotsForStaff(dateStr, staffName, service, durationMinutes = 60) {
+  const base = new Date(dateStr);
+  if (Number.isNaN(base.getTime())) return [];
+  const seed = stringSeed(dateStr, staffName, service);
+  const prng = mulberry32(seed);
+
+  // Working hours vary per staff/day
+  const startHour = randInt(prng, 8, 10);
+  const endHour = randInt(prng, 17, 20);
+  // Start minute offset to avoid :00 every time
+  const possibleOffsets = [0, 5, 10, 15, 20];
+  const offset = possibleOffsets[randInt(prng, 0, possibleOffsets.length - 1)];
+
+  // Lunch break between 12:00-14:00, 45–75 minutes
+  const lunchStartHour = randInt(prng, 12, 13);
+  const lunchLen = randInt(prng, 45, 75);
+
+  const dayStart = new Date(base);
+  dayStart.setHours(startHour, offset, 0, 0);
+  const dayEnd = new Date(base);
+  dayEnd.setHours(endHour, 0, 0, 0);
+
+  const lunchStart = new Date(base);
+  lunchStart.setHours(lunchStartHour, randInt(prng, 0, 20) * 3, 0, 0); // minute 0,3,6,... up to ~60
+  const lunchEnd = new Date(lunchStart.getTime() + minutes(lunchLen));
+
   const slots = [];
-  const start = new Date(date);
-  start.setHours(startHour, 0, 0, 0);
-  const end = new Date(date);
-  end.setHours(endHour, 0, 0, 0);
-  for (let t = new Date(start); t < end; t = new Date(t.getTime() + slotMinutes * 60000)) {
-    slots.push(new Date(t));
+  let cursor = new Date(dayStart);
+  while (cursor < dayEnd) {
+    // Skip into post-lunch if cursor falls within lunch
+    if (isWithin(cursor, lunchStart, lunchEnd)) {
+      cursor = new Date(lunchEnd);
+      continue;
+    }
+    // Ensure the slot fits within working hours and not inside lunch
+    const slotEnd = new Date(cursor.getTime() + minutes(durationMinutes));
+    if (slotEnd > dayEnd) break;
+    if (!(isWithin(cursor, lunchStart, lunchEnd) || isWithin(slotEnd, lunchStart, lunchEnd))) {
+      slots.push(new Date(cursor));
+    }
+    // Advance by a natural interval (35–55 min) with small variability
+    const step = randInt(prng, 35, 55);
+    cursor = new Date(cursor.getTime() + minutes(step));
   }
   return slots;
 }
@@ -59,7 +124,6 @@ exports.getAvailability = async (req, res) => {
     }
 
     const slotLen = Number(durationMinutes) || 60; // minutes
-    const allSlots = generateSlotsForDate(date, 30);
 
     // Compute day bounds
     const dayStart = new Date(date);
@@ -80,10 +144,11 @@ exports.getAvailability = async (req, res) => {
       bookingsByStaff.get(b.staff)?.push(new Date(b.dateTime));
     }
 
-    // For each staff, filter out slots that collide with existing bookings (assume booking occupies slotLen)
+    // For each staff, generate realistic slots and filter out collisions (assume booking occupies slotLen)
     const result = eligible.map(s => {
       const taken = bookingsByStaff.get(s.name) || [];
-      const availableSlots = allSlots.filter(slot => {
+      const rawSlots = generateRealisticSlotsForStaff(date, s.name, service, slotLen);
+      const availableSlots = rawSlots.filter(slot => {
         // Check collision with any taken slot (within duration)
         return !taken.some(t => Math.abs(slot.getTime() - t.getTime()) < slotLen * 60000);
       });
