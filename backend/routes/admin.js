@@ -19,12 +19,12 @@ const calculateBookingBalance = (booking) => {
   };
 };
 
-// Get all appointments (except cancelled)
+// Get all appointments
 router.get('/appointments', adminAuth, async (req, res) => {
   try {
     const { filter = 'all' } = req.query;
     
-    let query = { status: { $ne: 'cancelled' } };
+    let query = {};
     
     // Apply filters based on query parameter
     if (filter === 'upcoming') {
@@ -36,15 +36,35 @@ router.get('/appointments', adminAuth, async (req, res) => {
       query.status = 'completed';
     } else if (filter === 'pending') {
       query.status = { $in: ['pending', 'paid', 'confirmed'] };
+    } else if (filter === 'cancelled') {
+      query.status = 'cancelled';
+    } else if (filter === 'all') {
+      // For 'all', don't apply any status filter - show all appointments
+      query = {};
     }
     
     const appointments = await Booking.find(query).sort({ dateTime: 1 });
     
-    // Add balance information to each appointment
+    // Add balance information to each appointment and handle payment tracking
     const appointmentsWithBalance = appointments.map(appointment => {
-      const balanceInfo = calculateBookingBalance(appointment);
+      // Ensure paidAmount is properly set based on status
+      let effectivePaidAmount = appointment.paidAmount || 0;
+      
+      // If status is 'paid', 'confirmed', or 'completed' but no payment recorded, 
+      // assume they paid the full amount (this handles legacy data)
+      if ((appointment.status === 'paid' || appointment.status === 'confirmed' || appointment.status === 'completed') && 
+          (!appointment.paidAmount || appointment.paidAmount === 0)) {
+        effectivePaidAmount = appointment.price || 0;
+      }
+      
+      const balanceInfo = calculateBookingBalance({
+        ...appointment.toObject(),
+        paidAmount: effectivePaidAmount
+      });
+      
       return {
         ...appointment.toObject(),
+        paidAmount: effectivePaidAmount,
         ...balanceInfo
       };
     });
@@ -235,7 +255,7 @@ router.get('/reports/pdf', adminAuth, async (req, res) => {
     const subText = '#4a5568';
     const border = '#e9ecef';
     const light = '#fce4ec';
-    const money = (n) => `KSH ${Number(n || 0).toFixed(2)}`;
+    const money = (n) => Number(n || 0).toFixed(2);
 
     const drawHeader = () => {
       const { width } = doc.page;
@@ -250,20 +270,17 @@ router.get('/reports/pdf', adminAuth, async (req, res) => {
     };
 
     const drawFooter = () => {
-      const range = doc.bufferedPageRange();
-      // Apply to current page only
-      const { width, height } = doc.page;
-      doc.save();
-      doc.moveTo(36, height - 36).lineTo(width - 36, height - 36).strokeColor(border).stroke();
-      doc.fillColor(subText).fontSize(9).text('© 2025 GlowSlot', 36, height - 30);
-      doc.fillColor(subText).fontSize(9).text(`Page ${doc.page.number} of ${range.count}`, width - 140, height - 30);
-      doc.restore();
+      try {
+        const { width, height } = doc.page;
+        doc.save();
+        doc.moveTo(36, height - 36).lineTo(width - 36, height - 36).strokeColor(border).stroke();
+        doc.fillColor(subText).fontSize(9).text('© 2025 GlowSlot', 36, height - 30);
+        doc.fillColor(subText).fontSize(9).text(`Page ${doc.page.number}`, width - 140, height - 30);
+        doc.restore();
+      } catch (err) {
+        console.error('Footer drawing error:', err);
+      }
     };
-
-    doc.on('pageAdded', () => {
-      drawHeader();
-      drawFooter();
-    });
 
     // First page header
     drawHeader();
@@ -285,7 +302,7 @@ router.get('/reports/pdf', adminAuth, async (req, res) => {
     const paid = bookings.filter(b => b.status === 'paid').length;
     const confirmed = bookings.filter(b => b.status === 'confirmed').length;
 
-    drawCard(36, yStart, 'Total Revenue (received)', money(revenue), '#10B981');
+    drawCard(36, yStart, 'Total Revenue (received)', `KSH ${money(revenue)}`, '#10B981');
     drawCard(36 + cardW + 16, yStart, 'Bookings Created', String(bookings.length), brand);
     drawCard(36 + (cardW + 16) * 2, yStart, 'Status: C / Conf / Paid / Pend', `${completed} / ${confirmed} / ${paid} / ${pending}`, '#2196F3');
 
@@ -298,70 +315,79 @@ router.get('/reports/pdf', adminAuth, async (req, res) => {
     // Table header
     const startX = 36;
     let y = doc.y;
-    const widths = [80, 150, 120, 90, 70, 70];
+    const widths = [90, 140, 100, 80, 80, 80]; // Adjusted widths to prevent overlap
     const headers = ['Date', 'Service', 'Staff', 'Status', 'Price', 'Paid'];
 
     doc.save();
     doc.rect(startX, y - 2, widths.reduce((a,b)=>a+b,0), 20).fill(light);
-    doc.fillColor(brand).font('Helvetica-Bold').fontSize(10);
-    let x = startX + 6;
+    doc.fillColor(brand).font('Helvetica-Bold').fontSize(9); // Smaller font for headers
+    let x = startX + 4;
     headers.forEach((h, i) => {
-      doc.text(h, x, y + 2, { width: widths[i] - 12, align: 'left' });
+      doc.text(h, x, y + 4, { width: widths[i] - 8, align: 'left' });
       x += widths[i];
     });
     doc.restore();
     y += 22;
 
     // Rows
-    doc.font('Helvetica').fontSize(10).fillColor(text);
+    doc.font('Helvetica').fontSize(8).fillColor(text); // Smaller font for data rows
     bookings.forEach((b, idx) => {
-      if (y > doc.page.height - 72) {
+      // Check if we need a new page
+      if (y > doc.page.height - 120) {
+        // Add footer to current page before adding new page
         drawFooter();
         doc.addPage();
-        y = doc.y;
-        // redraw table header on new page
+        y = 120; // Start position after header
+        // Redraw table header on new page
         doc.save();
         doc.rect(startX, y - 2, widths.reduce((a,b)=>a+b,0), 20).fill(light);
-        doc.fillColor(brand).font('Helvetica-Bold').fontSize(10);
-        let hx = startX + 6;
-        headers.forEach((h, i) => { doc.text(h, hx, y + 2, { width: widths[i] - 12 }); hx += widths[i]; });
+        doc.fillColor(brand).font('Helvetica-Bold').fontSize(9);
+        let hx = startX + 4;
+        headers.forEach((h, i) => { 
+          doc.text(h, hx, y + 4, { width: widths[i] - 8 }); 
+          hx += widths[i]; 
+        });
         doc.restore();
         y += 22;
-        doc.font('Helvetica').fontSize(10).fillColor(text);
+        doc.font('Helvetica').fontSize(8).fillColor(text);
       }
 
+      // Alternate row colors
       if (idx % 2 === 0) {
         doc.save();
         doc.rect(startX, y - 2, widths.reduce((a,b)=>a+b,0), 18).fill('#fafafa');
         doc.restore();
       }
 
-      let cx = startX + 6;
+      let cx = startX + 4;
       const cells = [
         new Date(b.createdAt).toLocaleDateString(),
         b.service || '-',
         b.staff || '-',
         (b.status || '-'),
-        money(b.price),
-        money(b.paidAmount)
+        `KSH ${money(b.price)}`,
+        `KSH ${money(b.paidAmount)}`
       ];
       cells.forEach((val, i) => {
-        doc.fillColor(text).text(String(val), cx, y, { width: widths[i] - 12, align: i >= 4 ? 'right' : 'left' });
+        doc.fillColor(text).text(String(val), cx, y + 2, { width: widths[i] - 8, align: i >= 4 ? 'right' : 'left' });
         cx += widths[i];
       });
-      y += 18;
+      y += 20; // Increased row height for better spacing
     });
 
     // Totals row
-    if (y > doc.page.height - 72) { drawFooter(); doc.addPage(); y = doc.y; }
+    if (y > doc.page.height - 120) { 
+      doc.addPage(); 
+      y = 120; 
+    }
     doc.save();
     doc.moveTo(startX, y).lineTo(startX + widths.reduce((a,b)=>a+b,0), y).strokeColor(border).stroke();
-    doc.font('Helvetica-Bold').fillColor(text).text('Totals', startX + 6, y + 6, { width: widths[0] + widths[1] + widths[2] + widths[3] - 12 });
-    doc.text(money(bookings.reduce((a,b)=>a + (b.price || 0), 0)), startX + widths[0] + widths[1] + widths[2] + widths[3] + 6, y + 6, { width: widths[4] - 12, align: 'right' });
-    doc.text(money(bookings.reduce((a,b)=>a + (b.paidAmount || 0), 0)), startX + widths[0] + widths[1] + widths[2] + widths[3] + widths[4] + 6, y + 6, { width: widths[5] - 12, align: 'right' });
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(text).text('Totals', startX + 4, y + 6, { width: widths[0] + widths[1] + widths[2] + widths[3] - 8 });
+    doc.text(`KSH ${money(bookings.reduce((a,b)=>a + (b.price || 0), 0))}`, startX + widths[0] + widths[1] + widths[2] + widths[3] + 4, y + 6, { width: widths[4] - 8, align: 'right' });
+    doc.text(`KSH ${money(bookings.reduce((a,b)=>a + (b.paidAmount || 0), 0))}`, startX + widths[0] + widths[1] + widths[2] + widths[3] + widths[4] + 4, y + 6, { width: widths[5] - 8, align: 'right' });
     doc.restore();
 
-    // Footer for last page & end
+    // Add footer to final page and end the document
     drawFooter();
     doc.end();
   } catch (err) {
