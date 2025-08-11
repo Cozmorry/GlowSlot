@@ -1,5 +1,5 @@
 const BookingModel = require('../models/Booking');
-const { getServicePrice } = require('../data/servicePrices');
+const { getServicePrice, getServiceDuration } = require('../data/servicePrices');
 const User = require('../models/User');
 const { staffData } = require('../data/staffData');
 const transporter = require('../config/mailer');
@@ -105,8 +105,20 @@ function generateRealisticSlotsForStaff(dateStr, staffName, service, durationMin
     if (!(isWithin(cursor, lunchStart, lunchEnd) || isWithin(slotEnd, lunchStart, lunchEnd))) {
       slots.push(new Date(cursor));
     }
-    // Advance by a natural interval (35–55 min) with small variability
-    const step = randInt(prng, 35, 55);
+    // Advance by a realistic interval based on service duration
+    // Minimum 1 hour difference for all services, with longer gaps for longer services
+    let step;
+    if (durationMinutes >= 180) { // 3+ hours (tattoos, long hair services)
+      step = randInt(prng, 240, 360); // 4-6 hours between slots
+    } else if (durationMinutes >= 120) { // 2+ hours (hair coloring, treatments)
+      step = randInt(prng, 180, 240); // 3-4 hours between slots
+    } else if (durationMinutes >= 90) { // 1.5+ hours (makeup, spa)
+      step = randInt(prng, 120, 180); // 2-3 hours between slots
+    } else if (durationMinutes >= 60) { // 1+ hours (nails, waxing)
+      step = randInt(prng, 90, 120); // 1.5-2 hours between slots
+    } else { // Short services (barber, quick services) - minimum 1 hour
+      step = randInt(prng, 60, 90); // 1-1.5 hours between slots (minimum 1 hour)
+    }
     cursor = new Date(cursor.getTime() + minutes(step));
   }
   return slots;
@@ -124,7 +136,8 @@ exports.getAvailability = async (req, res) => {
       return res.json({ service, date, durationMinutes: Number(durationMinutes) || 60, staff: [] });
     }
 
-    const slotLen = Number(durationMinutes) || 60; // minutes
+    // Use service-specific duration or provided duration, default to 60 minutes
+    const slotLen = Number(durationMinutes) || getServiceDuration(service) || 60; // minutes
 
     // Compute day bounds
     const dayStart = new Date(date);
@@ -948,11 +961,15 @@ exports.createBooking = async (req, res) => {
       if (!eligible.includes(staff)) {
         return res.status(400).json({ message: 'Selected staff is not available for this service.' });
       }
-      // Check for booking conflict (assume 60 min window)
+      // Check for booking conflict using service-specific duration
       const desired = new Date(dateTime);
+      const serviceDuration = getServiceDuration(service);
       const conflict = await BookingModel.findOne({
         staff,
-        dateTime: desired,
+        dateTime: {
+          $gte: new Date(desired.getTime() - serviceDuration * 60000),
+          $lt: new Date(desired.getTime() + serviceDuration * 60000)
+        }
       });
       if (conflict) {
         return res.status(409).json({ message: 'Selected time is no longer available. Please pick another slot.' });

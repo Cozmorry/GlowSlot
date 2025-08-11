@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import Modal from './Modal';
+import { getServiceDuration } from '../data/servicePrices';
 
 export default function BookingForm({ open, onClose, service, onSuccess, category }) {
   const { user } = useAuth();
@@ -21,7 +22,8 @@ export default function BookingForm({ open, onClose, service, onSuccess, categor
     const fetchAvailability = async () => {
       if (!open || !selectedDate || !service) return;
       try {
-        const url = `http://localhost:5000/api/bookings/availability?service=${encodeURIComponent(service)}&date=${encodeURIComponent(selectedDate)}`;
+        const duration = getServiceDuration(service);
+        const url = `http://localhost:5000/api/bookings/availability?service=${encodeURIComponent(service)}&date=${encodeURIComponent(selectedDate)}&durationMinutes=${duration}`;
         const res = await fetch(url);
         const data = await res.json();
         if (res.ok) {
