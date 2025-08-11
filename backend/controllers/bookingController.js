@@ -240,6 +240,13 @@ exports.addToCart = async (req, res) => {
     newBooking.staff = assignRandomStaff(service);
 
     await newBooking.save();
+    console.log('Booking created successfully:', {
+      id: newBooking._id,
+      service: newBooking.service,
+      status: newBooking.status,
+      userId: newBooking.userId,
+      dateTime: newBooking.dateTime
+    });
     res.status(201).json(newBooking);
   } catch (error) {
     console.error('Error adding to cart:', error);
@@ -1187,7 +1194,7 @@ exports.getCartBookings = async (req, res) => {
   }
 };
 
-// Delete a booking
+// Delete a booking (for pending bookings only)
 exports.deleteBooking = async (req, res) => {
   try {
     const { id } = req.params;
@@ -1200,6 +1207,73 @@ exports.deleteBooking = async (req, res) => {
     res.status(200).json({ message: 'Booking cancelled successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Error cancelling booking', error: err.message });
+  }
+};
+
+// Cancel an appointment (for confirmed/paid appointments)
+exports.cancelAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+    
+    // Convert string userId to ObjectId
+    const mongoose = require('mongoose');
+    let userObjectId;
+    try {
+      userObjectId = new mongoose.Types.ObjectId(userId);
+    } catch (error) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    
+    // Find the booking and verify ownership
+    const booking = await BookingModel.findById(id);
+    
+    if (!booking) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+    
+    // Verify the user owns this booking
+    if (booking.userId.toString() !== userObjectId.toString()) {
+      return res.status(403).json({ message: 'You can only cancel your own appointments' });
+    }
+    
+    // Check if the appointment can be cancelled
+    if (booking.status === 'completed') {
+      return res.status(400).json({ message: 'Cannot cancel completed appointments' });
+    }
+    
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({ message: 'Appointment is already cancelled' });
+    }
+    
+    // Update the status to cancelled
+    booking.status = 'cancelled';
+    await booking.save();
+    
+    // Send cancellation email if user has email
+    try {
+      const user = await User.findById(userObjectId).lean();
+      if (user && user.email) {
+        await sendCancellationEmail(user, booking);
+      }
+    } catch (mailErr) {
+      console.error('Cancellation email error:', mailErr.message);
+    }
+    
+    res.status(200).json({ 
+      message: 'Appointment cancelled successfully',
+      booking: {
+        ...booking.toObject(),
+        ...calculateBookingBalance(booking)
+      }
+    });
+  } catch (err) {
+    console.error('Error cancelling appointment:', err);
+    res.status(500).json({ message: 'Error cancelling appointment', error: err.message });
   }
 };
 
@@ -1243,4 +1317,50 @@ exports.getOrderHistory = async (req, res) => {
     console.error('Error fetching order history:', err);
     res.status(500).json({ message: 'Error fetching order history', error: err.message });
   }
-}; 
+};
+
+// Send cancellation email
+async function sendCancellationEmail(user, booking) {
+  const when = new Date(booking.dateTime);
+  const prettyWhen = when.toLocaleString();
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>GlowSlot - Appointment Cancelled</title>
+      <style>
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;margin:0;padding:20px;background:#f7fafc}
+        .container{max-width:640px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.06);padding:28px}
+        .logo{font-size:24px;font-weight:800;color:#e91e63;margin-bottom:10px}
+        .title{font-size:20px;font-weight:700;color:#2d3748;margin:10px 0}
+        .meta div{margin:6px 0}
+        .footer{margin-top:24px;color:#718096;font-size:13px}
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">✨ GlowSlot</div>
+        <div class="title">Appointment Cancelled</div>
+        <p>Hi ${user.name || 'there'},</p>
+        <p>Your ${booking.service} appointment with ${booking.staff} has been <strong>cancelled</strong> as requested.</p>
+        <div class="meta">
+          <div><strong>Original Date & Time:</strong> ${new Date(booking.dateTime).toLocaleString()}</div>
+          <div><strong>Service:</strong> ${booking.service}</div>
+          <div><strong>Staff:</strong> ${booking.staff}</div>
+        </div>
+        <p>If you'd like to reschedule, please visit our website to book a new appointment.</p>
+        <p>Thank you for choosing GlowSlot!</p>
+        <div class="footer">© 2025 GlowSlot. All rights reserved.</div>
+      </div>
+    </body>
+    </html>`;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: user.email,
+    subject: 'GlowSlot - Appointment Cancelled',
+    html,
+  });
+} 

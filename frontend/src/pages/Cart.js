@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 import CartItem from '../components/CartItem';
 import { FaHistory, FaShoppingCart, FaCheckCircle, FaTimesCircle, FaClock, FaSpinner } from 'react-icons/fa';
@@ -23,6 +24,7 @@ const isDesktopWidth = () => window.innerWidth >= 900;
 export default function Cart() {
   const { theme } = useTheme();
   const { user, loading: authLoading } = useAuth();
+  const { showSuccess, showError } = useNotification();
   const navigate = useNavigate();
   const [isDesktop, setIsDesktop] = React.useState(isDesktopWidth());
   const [bookings, setBookings] = useState([]);
@@ -503,15 +505,67 @@ export default function Cart() {
                           </span>
                         )}
                       </div>
-                      {order.status === 'paid' && (
-                        <span style={{
-                          fontSize: 12,
-                          color: '#F59E0B',
-                          fontStyle: 'italic',
-                        }}>
-                          Awaiting admin confirmation
-                        </span>
-                      )}
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 8,
+                        alignItems: 'flex-end'
+                      }}>
+                        {order.status === 'paid' && (
+                          <span style={{
+                            fontSize: 12,
+                            color: '#F59E0B',
+                            fontStyle: 'italic',
+                          }}>
+                            Awaiting admin confirmation
+                          </span>
+                        )}
+                        {/* Cancel button for confirmed/paid appointments */}
+                        {(order.status === 'confirmed' || order.status === 'paid') && (
+                          <button
+                            onClick={async () => {
+                              if (window.confirm('Are you sure you want to cancel this appointment?')) {
+                                try {
+                                  const response = await fetch(`http://localhost:5000/api/bookings/${order._id}/cancel`, {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ userId: user.id })
+                                  });
+                                  
+                                  if (response.ok) {
+                                    showSuccess('Appointment cancelled successfully');
+                                    // Refresh order history
+                                    fetchOrderHistory();
+                                  } else {
+                                    const data = await response.json();
+                                    showError(data.message || 'Failed to cancel appointment');
+                                  }
+                                } catch (error) {
+                                  console.error('Error cancelling appointment:', error);
+                                  showError('Error cancelling appointment. Please try again.');
+                                }
+                              }
+                            }}
+                            style={{
+                              backgroundColor: '#EF4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              padding: '6px 12px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              transition: 'background-color 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = '#DC2626'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = '#EF4444'}
+                          >
+                            Cancel Appointment
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

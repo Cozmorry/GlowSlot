@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [todaysRevenue, setTodaysRevenue] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -23,7 +24,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
-    if (tabParam && ['overview', 'appointments', 'stats', 'users', 'reviews', 'settings'].includes(tabParam)) {
+    if (tabParam && ['overview', 'appointments', 'stats', 'revenue', 'users', 'reviews', 'settings'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, []);
@@ -79,6 +80,7 @@ export default function AdminDashboard() {
     setUser(authUser);
     fetchStats();
     fetchReviews();
+    fetchTodaysRevenue();
   }, [authUser, authLoading, navigate, logout]);
 
 
@@ -139,6 +141,28 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
+    }
+  };
+
+  const fetchTodaysRevenue = async () => {
+    try {
+      const token = getToken();
+      const response = await fetch('http://localhost:5000/api/admin/todays-revenue', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setTodaysRevenue(data);
+      } else {
+        console.error('Failed to fetch today\'s revenue');
+      }
+    } catch (error) {
+      console.error('Error fetching today\'s revenue:', error);
     }
   };
 
@@ -469,9 +493,10 @@ export default function AdminDashboard() {
           border: '1px solid rgba(255, 255, 255, 0.2)',
           marginTop: isMobile ? '16px' : '0'
         }}>
-                      {activeTab === 'overview' && <OverviewTab stats={stats} isMobile={isMobile} onTabChange={handleTabChange} />}
+                      {activeTab === 'overview' && <OverviewTab stats={stats} todaysRevenue={todaysRevenue} isMobile={isMobile} onTabChange={handleTabChange} />}
             {activeTab === 'appointments' && <AppointmentsTab isMobile={isMobile} showError={showError} />}
             {activeTab === 'stats' && <StatsTab stats={stats} isMobile={isMobile} />}
+    
             {activeTab === 'users' && <UsersTab isMobile={isMobile} />}
             {activeTab === 'reviews' && <ReviewsTab reviews={reviews} isMobile={isMobile} />}
             {activeTab === 'settings' && <SettingsTab isMobile={isMobile} />}
@@ -482,7 +507,7 @@ export default function AdminDashboard() {
 }
 
 // Overview Tab Component
-function OverviewTab({ stats, isMobile, onTabChange }) {
+function OverviewTab({ stats, todaysRevenue, isMobile, onTabChange }) {
   
   const StatCard = ({ title, value, icon, color, subtitle }) => (
     <div style={{
@@ -585,6 +610,13 @@ function OverviewTab({ stats, isMobile, onTabChange }) {
             icon="💰"
             color="#2196f3"
             subtitle="Total earnings"
+          />
+          <StatCard 
+            title="Today's Revenue" 
+            value={todaysRevenue ? `KSH ${todaysRevenue.revenue || 0}` : 'Loading...'} 
+            icon="📈"
+            color="#FF6B35"
+            subtitle={`${todaysRevenue?.transactions || 0} transactions today`}
           />
         </div>
       ) : (
@@ -804,7 +836,8 @@ function AppointmentsTab({ isMobile, showError }) {
             { value: 'all', label: 'All Appointments' },
             { value: 'upcoming', label: 'Upcoming' },
             { value: 'pending', label: 'Pending/Paid/Confirmed' },
-            { value: 'completed', label: 'Completed' }
+            { value: 'completed', label: 'Completed' },
+            { value: 'cancelled', label: 'Cancelled' }
           ].map(filterOption => (
             <button
               key={filterOption.value}
@@ -856,6 +889,7 @@ function AppointmentsTab({ isMobile, showError }) {
             {filter === 'upcoming' && 'No upcoming appointments found.'}
             {filter === 'pending' && 'No pending, paid, or confirmed appointments found.'}
             {filter === 'completed' && 'No completed appointments found.'}
+            {filter === 'cancelled' && 'No cancelled appointments found.'}
           </p>
         </div>
       ) : (
@@ -1272,6 +1306,8 @@ function StatsTab({ stats, isMobile }) {
     </div>
   );
 }
+
+
 
 // Users Tab Component
 function UsersTab({ isMobile }) {

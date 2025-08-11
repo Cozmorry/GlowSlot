@@ -23,4 +23,7 @@ router.post('/updateStatus', bookingController.updateBookingStatus);
 // Delete a booking
 router.delete('/:id', bookingController.deleteBooking);
 
+// Cancel an appointment
+router.post('/:id/cancel', bookingController.cancelAppointment);
+
 module.exports = router; 

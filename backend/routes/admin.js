@@ -167,6 +167,34 @@ router.get('/stats', adminAuth, async (req, res) => {
   }
 });
 
+
+
+// Get today's revenue
+router.get('/todays-revenue', adminAuth, async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const todaysPayments = await Payment.find({
+      createdAt: { $gte: today, $lt: tomorrow }
+    });
+    
+    const revenue = todaysPayments.reduce((sum, payment) => sum + payment.amount, 0);
+    const transactions = todaysPayments.length;
+    
+    res.json({
+      revenue,
+      transactions,
+      date: today.toISOString().split('T')[0]
+    });
+  } catch (err) {
+    console.error('Error fetching today\'s revenue:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // Get user listing
 router.get('/users', adminAuth, async (req, res) => {
   try {
