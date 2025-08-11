@@ -88,14 +88,41 @@ const CartItem = ({ booking, theme }) => {
         <p style={{ margin: '4px 0' }}>
           <strong style={{ color: '#FF69B4' }}>Contact:</strong> {booking.phone}
         </p>
-        <p style={{ 
+        <div style={{ 
           margin: '8px 0 0 0',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          color: '#FF69B4'
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px'
         }}>
-          KSH {booking.price || 0}
-        </p>
+          <p style={{ 
+            margin: '0',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            color: '#FF69B4'
+          }}>
+            Total: KSH {booking.totalPrice || booking.price || 0}
+          </p>
+          {booking.paidAmount > 0 && (
+            <p style={{ 
+              margin: '0',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#10B981'
+            }}>
+              Paid: KSH {booking.paidAmount}
+            </p>
+          )}
+          {booking.balance > 0 && (
+            <p style={{ 
+              margin: '0',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#F59E0B'
+            }}>
+              Balance: KSH {booking.balance}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

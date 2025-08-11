@@ -474,13 +474,35 @@ export default function Cart() {
                       paddingTop: 12,
                       borderTop: `1px solid ${theme.border}`,
                     }}>
-                      <span style={{
-                        fontSize: 16,
-                        fontWeight: 600,
-                        color: theme.text,
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 4,
                       }}>
-                        KSH {order.price}
-                      </span>
+                        <span style={{
+                          fontSize: 16,
+                          fontWeight: 600,
+                          color: theme.text,
+                        }}>
+                          Total: KSH {order.totalPrice || order.price}
+                        </span>
+                        <span style={{
+                          fontSize: 14,
+                          color: '#10B981',
+                          fontWeight: 500,
+                        }}>
+                          Paid: KSH {order.paidAmount || 0}
+                        </span>
+                        {order.balance > 0 && (
+                          <span style={{
+                            fontSize: 14,
+                            color: '#F59E0B',
+                            fontWeight: 500,
+                          }}>
+                            Balance: KSH {order.balance}
+                          </span>
+                        )}
+                      </div>
                       {order.status === 'paid' && (
                         <span style={{
                           fontSize: 12,

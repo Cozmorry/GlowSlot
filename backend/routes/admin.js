@@ -7,6 +7,18 @@ const transporter = require('../config/mailer');
 const Payment = require('../models/Payment');
 const PDFDocument = require('pdfkit');
 
+// Helper function to calculate balance for a booking
+const calculateBookingBalance = (booking) => {
+  const totalPrice = booking.price || 0;
+  const paidAmount = booking.paidAmount || 0;
+  const balance = Math.max(0, totalPrice - paidAmount);
+  return {
+    totalPrice,
+    paidAmount,
+    balance
+  };
+};
+
 // Get all appointments (except cancelled)
 router.get('/appointments', adminAuth, async (req, res) => {
   try {
@@ -28,7 +40,16 @@ router.get('/appointments', adminAuth, async (req, res) => {
     
     const appointments = await Booking.find(query).sort({ dateTime: 1 });
     
-    res.json(appointments);
+    // Add balance information to each appointment
+    const appointmentsWithBalance = appointments.map(appointment => {
+      const balanceInfo = calculateBookingBalance(appointment);
+      return {
+        ...appointment.toObject(),
+        ...balanceInfo
+      };
+    });
+    
+    res.json(appointmentsWithBalance);
   } catch (err) {
     console.error('Error fetching appointments:', err);
     res.status(500).json({ message: 'Server error', error: err.message });

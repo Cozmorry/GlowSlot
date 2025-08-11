@@ -938,6 +938,20 @@ function AppointmentsTab({ isMobile, showError }) {
                           <strong style={{ color: '#4a5568', fontSize: '14px' }}>Staff:</strong>
                           <p style={{ margin: '4px 0 0 0', color: '#2d3748' }}>{appointment.staff}</p>
                         </div>
+                        <div>
+                          <strong style={{ color: '#4a5568', fontSize: '14px' }}>Total Price:</strong>
+                          <p style={{ margin: '4px 0 0 0', color: '#2d3748', fontWeight: '600' }}>KSH {appointment.totalPrice || appointment.price}</p>
+                        </div>
+                        <div>
+                          <strong style={{ color: '#4a5568', fontSize: '14px' }}>Paid Amount:</strong>
+                          <p style={{ margin: '4px 0 0 0', color: '#10B981', fontWeight: '600' }}>KSH {appointment.paidAmount || 0}</p>
+                        </div>
+                        {appointment.balance > 0 && (
+                          <div>
+                            <strong style={{ color: '#4a5568', fontSize: '14px' }}>Balance:</strong>
+                            <p style={{ margin: '4px 0 0 0', color: '#F59E0B', fontWeight: '600' }}>KSH {appointment.balance}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                     

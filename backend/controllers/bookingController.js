@@ -5,6 +5,18 @@ const { staffData } = require('../data/staffData');
 const transporter = require('../config/mailer');
 const Payment = require('../models/Payment');
 
+// Helper function to calculate balance for a booking
+const calculateBookingBalance = (booking) => {
+  const totalPrice = booking.price || 0;
+  const paidAmount = booking.paidAmount || 0;
+  const balance = Math.max(0, totalPrice - paidAmount);
+  return {
+    totalPrice,
+    paidAmount,
+    balance
+  };
+};
+
 // Helper: determine primary service category from free-text service
 function getServiceCategory(service) {
   const keywordsByCategory = {
@@ -1158,8 +1170,18 @@ async function sendBookingCompletionEmail(user, booking) {
 exports.getCartBookings = async (req, res) => {
   try {
     const { userId } = req.query;
-    const bookings = await Booking.find({ userId, status: 'pending' });
-    res.json(bookings);
+    const bookings = await BookingModel.find({ userId, status: 'pending' });
+    
+    // Add balance information to each booking
+    const bookingsWithBalance = bookings.map(booking => {
+      const balanceInfo = calculateBookingBalance(booking);
+      return {
+        ...booking.toObject(),
+        ...balanceInfo
+      };
+    });
+    
+    res.json(bookingsWithBalance);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching cart bookings', error: err.message });
   }
@@ -1181,16 +1203,7 @@ exports.deleteBooking = async (req, res) => {
   }
 };
 
-// Get cart bookings for a user
-exports.getCartBookings = async (req, res) => {
-  try {
-    const { userId } = req.query;
-    const bookings = await BookingModel.find({ userId, status: 'pending' });
-    res.json(bookings);
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching cart bookings', error: err.message });
-  }
-};
+
 
 // Get order history for a user (all non-pending bookings)
 exports.getOrderHistory = async (req, res) => {
@@ -1216,7 +1229,16 @@ exports.getOrderHistory = async (req, res) => {
       status: { $ne: 'pending' } 
     }).sort({ createdAt: -1 }); // Sort by newest first
     
-    res.json(orderHistory);
+    // Add balance information to each booking
+    const orderHistoryWithBalance = orderHistory.map(booking => {
+      const balanceInfo = calculateBookingBalance(booking);
+      return {
+        ...booking.toObject(),
+        ...balanceInfo
+      };
+    });
+    
+    res.json(orderHistoryWithBalance);
   } catch (err) {
     console.error('Error fetching order history:', err);
     res.status(500).json({ message: 'Error fetching order history', error: err.message });
